@@ -85,22 +85,81 @@ app.post("/analyze", upload.single("audio"), async (req, res) => {
       });
     }
 
-    const prompt = `
-Você é um assistente especializado em resumir aulas em português do Brasil.
-Receberá a transcrição de uma aula. Responda SOMENTE em JSON válido no formato:
+    const prompt = 
+Você é um especialista em análise pedagógica de aulas baseado no modelo de Gagné (9 etapas).
+
+Analise a transcrição da aula abaixo e responda EXCLUSIVAMENTE em JSON válido.
+
+Formato obrigatório:
+
 {
-  "summary": "resumo curto e objetivo da aula em 3 a 5 linhas",
-  "commands": ["lista de comandos dados pelo professor"],
-  "pendings": ["lista de pendências e combinados futuros"],
-  "highlights": ["até 5 destaques do que aconteceu"]
+  "tldr": "resumo curto em 1 frase",
+  "alerts": ["lista de alertas relevantes"],
+  "gagne": [
+    {
+      "etapa": "Atenção",
+      "evidencia": "",
+      "avaliacao": "Adequado | Parcial | Ausente",
+      "observacao": ""
+    },
+    {
+      "etapa": "Objetivo",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Conhecimento prévio",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Conteúdo",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Orientação",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Prática",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Feedback",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Avaliação",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    },
+    {
+      "etapa": "Retenção",
+      "evidencia": "",
+      "avaliacao": "",
+      "observacao": ""
+    }
+  ],
+  "commands": [],
+  "pendings": []
 }
 
 Regras:
-- Não invente.
-- Se algo não existir, use lista vazia.
-- Foque em contexto de sala de aula.
-- Seja literal e claro.
-- Resuma em português do Brasil.
+- Não invente fatos
+- Use a transcrição real
+- Se algo não existir, marque como "Ausente"
+- Seja direto, técnico e pedagógico
 
 Transcrição:
 ${transcript}
