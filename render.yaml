@@ -1,7 +1,7 @@
 
 services:
   - type: web
-    name: ouvidor-ia-real-v2
+    name: ouvidor-ia
     env: node
     plan: free
     buildCommand: npm install
