@@ -7,182 +7,376 @@
   <title>Ouvidor.IA Premium</title>
   <style>
     :root{
-      --bg:#081225;
-      --panel:#0d1a33;
-      --panel-2:#11203d;
-      --text:#eef3ff;
-      --muted:#97a7c6;
-      --blue:#2f73ff;
-      --red:#d63b3b;
-      --green:#23c26b;
-      --yellow:#e4b527;
-      --border:#1f3157;
-      --chip:#122445;
+      --bg:#f7f9fc;
+      --panel:#ffffff;
+      --panel-soft:#f3f6fb;
+      --text:#1f2a37;
+      --muted:#6b7280;
+      --blue:#2563eb;
+      --blue-soft:#dbeafe;
+      --red:#dc2626;
+      --green:#16a34a;
+      --yellow:#d97706;
+      --border:#dbe3ef;
+      --shadow:0 8px 24px rgba(15,23,42,.06);
+      --radius:18px;
     }
+
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,sans-serif;
-      background:linear-gradient(180deg,#06101f 0%, #09152a 100%);
-      color:var(--text)
+      background:var(--bg);
+      color:var(--text);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:20px 16px 40px;
+    }
+
     .card{
-      background:rgba(13,26,51,.97);
+      background:var(--panel);
       border:1px solid var(--border);
-      border-radius:22px;
+      border-radius:var(--radius);
       padding:18px;
       margin-bottom:16px;
-      box-shadow:0 10px 30px rgba(0,0,0,.18)
+      box-shadow:var(--shadow);
     }
-    .hero{text-align:center}
-    .hero h1{font-size:30px;margin:6px 0 14px}
-    .hero p{margin:0;color:var(--muted);line-height:1.5}
-    .controls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+
+    .hero{
+      text-align:center;
+      padding:22px 18px;
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:30px;
+      line-height:1.1;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+
     button{
       border:none;
-      border-radius:16px;
-      padding:16px 22px;
-      font-size:16px;
+      border-radius:14px;
+      padding:14px 18px;
+      font-size:15px;
       font-weight:700;
-      cursor:pointer
+      cursor:pointer;
+      transition:.15s ease;
     }
-    .primary{background:var(--blue);color:#fff}
-    .danger{background:#8e2020;color:#fff}
-    .ghost{background:#1a2847;color:#fff;border:1px solid #2a3d69}
-    button[disabled]{opacity:.55;cursor:not-allowed}
-    .metric{font-size:48px;font-weight:800;margin-top:10px}
-    .muted,.small{color:var(--muted);line-height:1.45}
-    .small{font-size:12px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    .col-12{grid-column:span 12}
-    .col-8{grid-column:span 8}
-    .col-6{grid-column:span 6}
-    .col-4{grid-column:span 4}
-    .col-3{grid-column:span 3}
-    @media(max-width:900px){
-      .col-8,.col-6,.col-4,.col-3{grid-column:span 12}
-    }
-    input, textarea, select{
-      width:100%;
-      padding:14px;
-      border-radius:16px;
-      border:1px solid #2b406c;
-      background:#09152a;
+
+    button:hover{transform:translateY(-1px)}
+    button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+    .primary{
+      background:var(--blue);
       color:#fff;
-      outline:none
     }
-    .hidden{display:none}
-    .list{display:grid;gap:10px}
-    .item{
-      padding:14px;
-      border:1px solid #25385f;
-      border-radius:16px;
-      background:#081225
+
+    .danger{
+      background:var(--red);
+      color:#fff;
     }
-    .tag{
-      display:inline-block;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800
+
+    .ghost{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--border);
     }
-    .green{background:rgba(35,194,107,.15);color:var(--green)}
-    .yellow{background:rgba(228,181,39,.15);color:var(--yellow)}
-    .red{background:rgba(214,59,59,.15);color:var(--red)}
-    .voice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:800px){
-      .voice-grid{grid-template-columns:1fr}
+
+    .metric{
+      font-size:44px;
+      font-weight:800;
+      margin-top:10px;
+      letter-spacing:-.02em;
     }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:780px
+
+    .muted,.small{
+      color:var(--muted);
+      line-height:1.45;
     }
-    th,td{
-      border:1px solid #263a62;
-      padding:12px;
-      text-align:left;
-      vertical-align:top
-    }
-    th{background:#0a1730}
-    .table-wrap{overflow:auto;border-radius:18px}
-    canvas{
-      width:100%;
-      height:220px;
-      background:#081225;
-      border-radius:16px;
-      border:1px solid #243652
-    }
-    .section-title{font-size:15px;color:var(--muted);margin-bottom:8px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{
-      background:var(--chip);
-      border:1px solid #2a3d69;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:12px;
-      color:#d8e4ff
-    }
+
+    .small{font-size:12px}
+
     .checkbox-row{
       margin-top:12px;
       display:flex;
       justify-content:center;
       align-items:center;
       gap:8px;
-      color:#d8e4ff
+      color:var(--muted);
     }
+
     .checkbox-row input{
       width:auto;
-      padding:0;
-      margin:0
+      margin:0;
     }
-    .filter-grid{
+
+    .grid{
       display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:12px
+      grid-template-columns:repeat(12,1fr);
+      gap:16px;
     }
+
+    .col-12{grid-column:span 12}
+    .col-8{grid-column:span 8}
+    .col-6{grid-column:span 6}
+    .col-4{grid-column:span 4}
+    .col-3{grid-column:span 3}
+
     @media(max-width:900px){
-      .filter-grid{grid-template-columns:1fr 1fr}
+      .col-8,.col-6,.col-4,.col-3{grid-column:span 12}
     }
-    @media(max-width:600px){
-      .filter-grid{grid-template-columns:1fr}
+
+    .section-title{
+      font-size:13px;
+      font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:8px;
     }
-    .clickable{
-      cursor:pointer;
-      transition:transform .12s ease, border-color .12s ease
+
+    .item{
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-soft);
     }
-    .clickable:active{transform:scale(.99)}
-    .clickable:hover{border-color:#46659f}
+
+    .tag{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .green{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .yellow{
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+    .red{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .hidden{display:none}
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:14px;
+    }
+
+    @media(max-width:850px){
+      .field-grid{grid-template-columns:1fr}
+    }
+
+    .field label{
+      display:block;
+      margin-bottom:6px;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .input-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    input, textarea, select{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+
+    input::placeholder, textarea::placeholder{
+      color:#9aa5b5;
+    }
+
+    .mic-btn{
+      min-width:44px;
+      width:44px;
+      height:44px;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:12px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius:16px;
+      border:1px solid var(--border);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:760px;
+      background:#fff;
+    }
+
+    th,td{
+      padding:12px;
+      text-align:left;
+      vertical-align:top;
+      border-bottom:1px solid var(--border);
+      font-size:14px;
+    }
+
+    th{
+      background:#f8fafc;
+      color:#475569;
+      font-weight:700;
+    }
+
+    canvas{
+      width:100%;
+      height:220px;
+      background:#fff;
+      border-radius:14px;
+      border:1px solid var(--border);
+    }
+
     .audio-row{
       display:flex;
       gap:12px;
       align-items:center;
-      flex-wrap:wrap
+      flex-wrap:wrap;
     }
-    .range-wrap{margin-bottom:16px}
+
+    .range-wrap{
+      margin-bottom:16px;
+    }
+
     .range-wrap label{
       display:flex;
       justify-content:space-between;
-      margin-bottom:6px
+      align-items:center;
+      margin-bottom:8px;
+      font-size:14px;
+      font-weight:700;
     }
+
     input[type="range"]{
       -webkit-appearance:none;
       appearance:none;
       height:10px;
+      padding:0;
       border:none;
       border-radius:999px;
-      background:#3b4250;
-      padding:0
+      background:#d1d5db;
     }
+
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance:none;
       appearance:none;
-      width:22px;
-      height:22px;
+      width:20px;
+      height:20px;
       border-radius:50%;
       background:#fff;
-      border:2px solid rgba(0,0,0,.25)
+      border:2px solid rgba(0,0,0,.18);
+      box-shadow:0 2px 6px rgba(0,0,0,.12);
+    }
+
+    input[type="range"]::-moz-range-thumb{
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#fff;
+      border:2px solid rgba(0,0,0,.18);
+      box-shadow:0 2px 6px rgba(0,0,0,.12);
+    }
+
+    .filter-toggle{
+      margin-top:12px;
+    }
+
+    .filter-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:12px;
+      margin-top:16px;
+    }
+
+    @media(max-width:900px){
+      .filter-grid{grid-template-columns:1fr 1fr}
+    }
+
+    @media(max-width:600px){
+      .filter-grid{grid-template-columns:1fr}
+    }
+
+    .clickable{
+      cursor:pointer;
+      transition:transform .12s ease, border-color .12s ease;
+    }
+
+    .clickable:hover{
+      transform:translateY(-1px);
+      border-color:#b9c7db;
+    }
+
+    .history-title{
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .chip{
+      background:#eef3ff;
+      border:1px solid #d9e4ff;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:#37507a;
+    }
+
+    .top-line{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
   </style>
 </head>
@@ -207,58 +401,66 @@
   </div>
 
   <div class="card">
-    <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-      <strong>Configurar aula (opcional)</strong>
+    <div class="top-line">
+      <strong>Detalhes da aula (opcional)</strong>
       <button id="toggleConfigBtn" class="ghost">Mostrar / ocultar</button>
     </div>
 
-    <div id="configBlock" class="hidden" style="margin-top:16px;">
-      <div class="grid">
-        <div class="col-4">
+    <div id="configBlock" class="hidden">
+      <div class="small" style="margin-top:12px;">Digite ou grave os detalhes da aula. Informações opcionais.</div>
+
+      <div class="field-grid">
+        <div class="field">
           <label>Instituição de Ensino</label>
-          <div class="audio-row">
-            <input id="cfgInstitution" />
-            <button class="ghost" data-voice="cfgInstitution">🎤</button>
+          <div class="input-row">
+            <input id="cfgInstitution" placeholder="Ex.: Colégio Super" />
+            <button class="ghost mic-btn" data-voice="cfgInstitution">🎤</button>
           </div>
         </div>
-        <div class="col-4">
+
+        <div class="field">
           <label>Nome da Turma</label>
-          <div class="audio-row">
-            <input id="cfgClass" />
-            <button class="ghost" data-voice="cfgClass">🎤</button>
+          <div class="input-row">
+            <input id="cfgClass" placeholder="Ex.: 3B" />
+            <button class="ghost mic-btn" data-voice="cfgClass">🎤</button>
           </div>
         </div>
-        <div class="col-4">
+
+        <div class="field">
           <label>Disciplina</label>
-          <div class="audio-row">
-            <input id="cfgSubject" />
-            <button class="ghost" data-voice="cfgSubject">🎤</button>
+          <div class="input-row">
+            <input id="cfgSubject" placeholder="Ex.: Matemática" />
+            <button class="ghost mic-btn" data-voice="cfgSubject">🎤</button>
           </div>
         </div>
-        <div class="col-4">
+
+        <div class="field">
           <label>Tema da Aula</label>
-          <div class="audio-row">
-            <input id="cfgTopic" />
-            <button class="ghost" data-voice="cfgTopic">🎤</button>
+          <div class="input-row">
+            <input id="cfgTopic" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" />
+            <button class="ghost mic-btn" data-voice="cfgTopic">🎤</button>
           </div>
         </div>
-        <div class="col-4">
+
+        <div class="field">
           <label>Aluno Específico</label>
-          <div class="audio-row">
-            <input id="cfgStudent" />
-            <button class="ghost" data-voice="cfgStudent">🎤</button>
+          <div class="input-row">
+            <input id="cfgStudent" placeholder="João Pedro e Maria Izadora" />
+            <button class="ghost mic-btn" data-voice="cfgStudent">🎤</button>
           </div>
         </div>
-        <div class="col-4">
+
+        <div class="field">
           <label>Data</label>
-          <div class="audio-row">
-            <input id="cfgDate" />
-            <button class="ghost" data-voice="cfgDate">🎤</button>
+          <div class="input-row">
+            <input id="cfgDate" placeholder="10/Mar/2026" />
+            <button class="ghost mic-btn" data-voice="cfgDate">🎤</button>
           </div>
         </div>
       </div>
+
       <div class="controls">
-        <button class="ghost" id="saveConfigBtn">Salvar configuração</button>
+        <button class="ghost" id="saveConfigBtn">Salvar detalhes</button>
       </div>
     </div>
 
@@ -270,9 +472,9 @@
 </div>
 
 <script>
-  const STORAGE_KEY = "ouvidor_ia_premium_history_v2";
-  const CONFIG_KEY = "ouvidor_ia_premium_config_v2";
-  const AUDIO_DB_NAME = "ouvidor_ia_audio_db";
+  const STORAGE_KEY = "ouvidor_ia_premium_history_v3";
+  const CONFIG_KEY = "ouvidor_ia_premium_config_v3";
+  const AUDIO_DB_NAME = "ouvidor_ia_audio_db_v3";
   const AUDIO_STORE = "audios";
 
   let recorder = null;
@@ -288,6 +490,7 @@
   let secondTimer = null;
   let perSecondDb = [];
   let currentSecondPeak = 25;
+  let currentRecorded = false;
 
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
@@ -377,14 +580,14 @@
     savedConfigPreview.textContent = parts.length ? parts.join(" • ") : "Nenhuma configuração prévia.";
   }
 
-  function loadConfigIntoFields() {
+  function loadConfigIntoFields(prefix = "cfg") {
     const cfg = getConfig();
-    cfgInstitution.value = cfg.institution || "";
-    cfgClass.value = cfg.className || "";
-    cfgSubject.value = cfg.subject || "";
-    cfgTopic.value = cfg.topic || "";
-    cfgStudent.value = cfg.student || "";
-    cfgDate.value = cfg.date || "";
+    document.getElementById(prefix + "Institution").value = cfg.institution || "";
+    document.getElementById(prefix + "Class").value = cfg.className || "";
+    document.getElementById(prefix + "Subject").value = cfg.subject || "";
+    document.getElementById(prefix + "Topic").value = cfg.topic || "";
+    document.getElementById(prefix + "Student").value = cfg.student || "";
+    document.getElementById(prefix + "Date").value = cfg.date || "";
   }
 
   function readConfigFromFields(prefix = "cfg") {
@@ -425,7 +628,7 @@
 
     const yFor = (v) => h - ((v - minDb) / (maxDb - minDb || 1)) * (h - 50) - 20;
 
-    ctx.strokeStyle = "#3a4b67";
+    ctx.strokeStyle = "#d7dfeb";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(50, 20);
@@ -435,13 +638,13 @@
 
     if (!samples.length) {
       ctx.fillStyle = "#94a3b8";
-      ctx.font = "22px Arial";
+      ctx.font = "20px Arial";
       ctx.fillText("Sem dados suficientes para gráfico.", 70, h / 2);
       return;
     }
 
     const maxX = samples.length - 1 || 1;
-    ctx.strokeStyle = "#60a5fa";
+    ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 4;
     ctx.beginPath();
     samples.forEach((v, i) => {
@@ -468,14 +671,14 @@
 
     const yForDb = (db) => h - ((db - 25) / (85 - 25)) * (h - 50) - 20;
 
-    [["rgba(35,194,107,.12)",25,40],["rgba(228,181,39,.12)",40,50],["rgba(214,59,59,.12)",50,85]].forEach(([color, from, to]) => {
+    [["rgba(22,163,74,.10)",25,40],["rgba(217,119,6,.10)",40,50],["rgba(220,38,38,.10)",50,85]].forEach(([color, from, to]) => {
       const y1 = yForDb(to);
       const y2 = yForDb(from);
       ctx.fillStyle = color;
       ctx.fillRect(50, y1, w - 70, y2 - y1);
     });
 
-    ctx.strokeStyle = "#3a4b67";
+    ctx.strokeStyle = "#d7dfeb";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(50, 20);
@@ -485,13 +688,13 @@
 
     if (!samples.length) {
       ctx.fillStyle = "#94a3b8";
-      ctx.font = "22px Arial";
+      ctx.font = "20px Arial";
       ctx.fillText("Sem dados suficientes para gráfico.", 70, h / 2);
       return;
     }
 
     const maxX = samples.length - 1 || 1;
-    ctx.strokeStyle = "#60a5fa";
+    ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 4;
     ctx.beginPath();
     samples.forEach((db, i) => {
@@ -558,7 +761,7 @@
   async function playAudio(id) {
     const blob = await getAudioBlob(id);
     if (!blob) {
-      alert("Gravação não encontrada neste dispositivo.");
+      alert("Esta aula não teve áudio salvo para reprodução.");
       return;
     }
     const url = URL.createObjectURL(blob);
@@ -637,58 +840,65 @@
       <div class="card">
         <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
           <h3 style="margin:0;">Ouvir gravação</h3>
-          <button class="ghost" id="playCurrentAudioBtn">▶ Ouvir gravação</button>
+          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="top-line">
           <strong>Refinar dados da aula (opcional)</strong>
           <button id="toggleRefineBtn" class="ghost">Mostrar / ocultar</button>
         </div>
 
-        <div id="refineBlock" class="hidden" style="margin-top:16px;">
-          <div class="grid">
-            <div class="col-4">
+        <div id="refineBlock" class="hidden">
+          <div class="small" style="margin-top:12px;">Digite ou grave os detalhes da aula. Informações opcionais.</div>
+
+          <div class="field-grid">
+            <div class="field">
               <label>Instituição</label>
-              <div class="audio-row">
-                <input id="postInstitution" value="${escapeHtml(record.config.institution || "")}" />
-                <button class="ghost" data-voice="postInstitution">🎤</button>
+              <div class="input-row">
+                <input id="postInstitution" placeholder="Ex.: Colégio Super" value="${escapeHtml(record.config.institution || "")}" />
+                <button class="ghost mic-btn" data-voice="postInstitution">🎤</button>
               </div>
             </div>
-            <div class="col-4">
+
+            <div class="field">
               <label>Turma</label>
-              <div class="audio-row">
-                <input id="postClass" value="${escapeHtml(record.config.className || "")}" />
-                <button class="ghost" data-voice="postClass">🎤</button>
+              <div class="input-row">
+                <input id="postClass" placeholder="Ex.: 3B" value="${escapeHtml(record.config.className || "")}" />
+                <button class="ghost mic-btn" data-voice="postClass">🎤</button>
               </div>
             </div>
-            <div class="col-4">
+
+            <div class="field">
               <label>Disciplina</label>
-              <div class="audio-row">
-                <input id="postSubject" value="${escapeHtml(record.config.subject || "")}" />
-                <button class="ghost" data-voice="postSubject">🎤</button>
+              <div class="input-row">
+                <input id="postSubject" placeholder="Ex.: Matemática" value="${escapeHtml(record.config.subject || "")}" />
+                <button class="ghost mic-btn" data-voice="postSubject">🎤</button>
               </div>
             </div>
-            <div class="col-4">
+
+            <div class="field">
               <label>Tema</label>
-              <div class="audio-row">
-                <input id="postTopic" value="${escapeHtml(record.config.topic || "")}" />
-                <button class="ghost" data-voice="postTopic">🎤</button>
+              <div class="input-row">
+                <input id="postTopic" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" value="${escapeHtml(record.config.topic || "")}" />
+                <button class="ghost mic-btn" data-voice="postTopic">🎤</button>
               </div>
             </div>
-            <div class="col-4">
+
+            <div class="field">
               <label>Aluno</label>
-              <div class="audio-row">
-                <input id="postStudent" value="${escapeHtml(record.config.student || "")}" />
-                <button class="ghost" data-voice="postStudent">🎤</button>
+              <div class="input-row">
+                <input id="postStudent" placeholder="João Pedro e Maria Izadora" value="${escapeHtml(record.config.student || "")}" />
+                <button class="ghost mic-btn" data-voice="postStudent">🎤</button>
               </div>
             </div>
-            <div class="col-4">
+
+            <div class="field">
               <label>Data</label>
-              <div class="audio-row">
-                <input id="postDate" value="${escapeHtml(record.config.date || "")}" />
-                <button class="ghost" data-voice="postDate">🎤</button>
+              <div class="input-row">
+                <input id="postDate" placeholder="10/Mar/2026" value="${escapeHtml(record.config.date || "")}" />
+                <button class="ghost mic-btn" data-voice="postDate">🎤</button>
               </div>
             </div>
           </div>
@@ -700,7 +910,7 @@
         ${renderSlider("Motivação prévia", "motivacao", record.socio.motivacao)}
         ${renderSlider("Satisfação final", "satisfacao", record.socio.satisfacao)}
         ${renderSlider("Estado físico", "fisico", record.socio.fisico)}
-        ${renderSlider("Estado mental", "mental", record.socio.mental)}
+        ${renderSlider("Estado Emocional/Mental", "mental", record.socio.mental)}
         ${renderSlider("Infraestrutura funcionando", "infraestrutura", record.socio.infraestrutura)}
         <div class="controls">
           <button class="ghost" id="saveAfterBtn">Salvar dados desta aula</button>
@@ -761,7 +971,7 @@
     historyBlock.classList.remove("hidden");
 
     if (!history.length) {
-      historyBlock.innerHTML = `<div class="card"><h2>Dashboard histórico</h2><div class="small">Ainda não há aulas no histórico.</div></div>`;
+      historyBlock.innerHTML = `<div class="card"><h2>Seu Histórico</h2><div class="small">Ainda não há aulas no histórico.</div></div>`;
       return;
     }
 
@@ -774,21 +984,13 @@
 
     historyBlock.innerHTML = `
       <div class="card">
-        <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-          <h2 style="margin:0;">Dashboard histórico</h2>
+        <div class="top-line">
+          <h2 style="margin:0;">Seu Histórico</h2>
           <button class="ghost" id="toggleHistoryBtn">Mostrar / ocultar</button>
         </div>
 
         <div id="historyContent" class="hidden" style="margin-top:16px;">
-          <div class="filter-grid">
-            ${renderFilterSelect("fInstitution", "Instituição", institutionValues)}
-            ${renderFilterSelect("fClass", "Turma", classValues)}
-            ${renderFilterSelect("fSubject", "Disciplina", subjectValues)}
-            ${renderFilterSelect("fTopic", "Tema", topicValues)}
-            ${renderFilterSelect("fStudent", "Aluno", studentValues)}
-          </div>
-
-          <div class="grid" style="margin-top:16px;">
+          <div class="grid">
             <div class="col-6 card clickable" id="cardAmbiental">
               <h3>Fatores ambientais</h3>
               <canvas id="chartAmbiental"></canvas>
@@ -812,14 +1014,28 @@
               <canvas id="chartSocio"></canvas>
               <div id="detailSocio" class="small hidden" style="margin-top:10px;"></div>
             </div>
-
-            <div class="col-12 card">
-              <h3>Últimas aulas</h3>
-              <div id="historyLessons" class="list"></div>
-            </div>
-
-            <div class="col-12 card hidden" id="historyLessonDetail"></div>
           </div>
+
+          <div class="filter-toggle">
+            <button class="ghost" id="toggleFiltersBtn">Filtrar Histórico</button>
+          </div>
+
+          <div id="filtersBlock" class="hidden">
+            <div class="filter-grid">
+              ${renderFilterSelect("fInstitution", "Instituição", institutionValues)}
+              ${renderFilterSelect("fClass", "Turma", classValues)}
+              ${renderFilterSelect("fSubject", "Disciplina", subjectValues)}
+              ${renderFilterSelect("fTopic", "Tema", topicValues)}
+              ${renderFilterSelect("fStudent", "Aluno", studentValues)}
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px;">
+            <h3>Últimas aulas</h3>
+            <div id="historyLessons" class="list"></div>
+          </div>
+
+          <div class="card hidden" id="historyLessonDetail"></div>
         </div>
       </div>
     `;
@@ -883,18 +1099,30 @@
 
       const list = document.getElementById("historyLessons");
       list.innerHTML = items.length
-        ? items.map(item => `
-          <div class="item clickable" data-open-record="${item.id}">
-            <strong>${escapeHtml(item.config?.topic || "Aula sem tema")}</strong><br/>
-            <span class="small">${new Date(item.createdAt).toLocaleString("pt-BR")}</span><br/>
-            <span class="small">${escapeHtml(item.tldr || "Sem resumo rápido.")}</span>
-          </div>
-        `).join("")
+        ? items.map(item => {
+            const details = [];
+            if (item.config?.institution) details.push(item.config.institution);
+            if (item.config?.className) details.push(item.config.className);
+            if (item.config?.subject) details.push(item.config.subject);
+            if (item.config?.topic) details.push(item.config.topic);
+            if (item.config?.student) details.push(item.config.student);
+
+            return `
+              <div class="item clickable" data-open-record="${item.id}">
+                <div class="history-title"><strong>${new Date(item.createdAt).toLocaleString("pt-BR")}</strong></div>
+                <div class="small">${details.length ? escapeHtml(details.join(" / ")) : "Detalhes não informados"}</div>
+              </div>
+            `;
+          }).join("")
         : `<div class="item">Nenhuma aula encontrada com esses filtros.</div>`;
 
       document.querySelectorAll("[data-open-record]").forEach(el => {
         el.onclick = () => openHistoryRecord(el.getAttribute("data-open-record"));
       });
+    };
+
+    document.getElementById("toggleFiltersBtn").onclick = () => {
+      document.getElementById("filtersBlock").classList.toggle("hidden");
     };
 
     ["fInstitution","fClass","fSubject","fTopic","fStudent"].forEach(id => {
@@ -920,17 +1148,18 @@
 
     const band = colorBand(record.avgDb);
 
+    const details = [];
+    if (record.config?.institution) details.push(record.config.institution);
+    if (record.config?.className) details.push(record.config.className);
+    if (record.config?.subject) details.push(record.config.subject);
+    if (record.config?.topic) details.push(record.config.topic);
+    if (record.config?.student) details.push(record.config.student);
+
     target.classList.remove("hidden");
     target.innerHTML = `
       <h3>Registro completo da aula</h3>
-      <div class="chips" style="margin-bottom:12px;">
-        ${record.config?.institution ? `<div class="chip">${escapeHtml(record.config.institution)}</div>` : ""}
-        ${record.config?.className ? `<div class="chip">${escapeHtml(record.config.className)}</div>` : ""}
-        ${record.config?.subject ? `<div class="chip">${escapeHtml(record.config.subject)}</div>` : ""}
-        ${record.config?.topic ? `<div class="chip">${escapeHtml(record.config.topic)}</div>` : ""}
-        ${record.config?.student ? `<div class="chip">${escapeHtml(record.config.student)}</div>` : ""}
-        ${record.config?.date ? `<div class="chip">${escapeHtml(record.config.date)}</div>` : ""}
-      </div>
+      <div class="item" style="margin-bottom:12px;"><strong>${new Date(record.createdAt).toLocaleString("pt-BR")}</strong></div>
+      <div class="small" style="margin-bottom:12px;">${details.length ? escapeHtml(details.join(" / ")) : "Detalhes não informados"}</div>
 
       <div class="item" style="margin-bottom:12px;"><strong>Resumo rápido:</strong> ${escapeHtml(record.tldr || "Sem resumo.")}</div>
       <div class="item" style="margin-bottom:12px;"><strong>Ruído:</strong> ${band.key} — ${band.text}</div>
@@ -959,7 +1188,7 @@
       </div>
 
       <div class="audio-row">
-        <button class="ghost" id="playHistoryAudioBtn">▶ Ouvir gravação</button>
+        <button class="ghost" id="playHistoryAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
         <button class="ghost" id="closeHistoryDetailBtn">Fechar</button>
       </div>
     `;
@@ -974,16 +1203,12 @@
   }
 
   async function startRecording() {
-    if (!recordCheck.checked) {
-      alert("Marque 'Gravar aula' antes de iniciar.");
-      return;
-    }
-
     resultBlock.classList.add("hidden");
     historyBlock.classList.add("hidden");
     chunks = [];
     perSecondDb = [];
     currentSecondPeak = 25;
+    currentRecorded = recordCheck.checked;
 
     stream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -1101,10 +1326,13 @@
           fisico: 5,
           mental: 5,
           infraestrutura: 5
-        }
+        },
+        recorded: currentRecorded
       };
 
-      await saveAudioBlob(record.id, blob);
+      if (currentRecorded) {
+        await saveAudioBlob(record.id, blob);
+      }
 
       const history = getHistory();
       history.unshift(record);
@@ -1128,17 +1356,18 @@
     const cfg = readConfigFromFields("cfg");
     saveConfig(cfg);
     renderSavedConfigPreview();
-    alert("Configuração salva no dispositivo.");
+    alert("Detalhes salvos no dispositivo.");
   };
 
-  document.querySelectorAll("[data-voice]").forEach(btn => {
-    btn.onclick = () => openVoiceForInput(btn.getAttribute("data-voice"));
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-voice]");
+    if (btn) openVoiceForInput(btn.getAttribute("data-voice"));
   });
 
   startBtn.onclick = startRecording;
   stopBtn.onclick = stopRecording;
 
-  loadConfigIntoFields();
+  loadConfigIntoFields("cfg");
   renderSavedConfigPreview();
   renderHistory();
 </script>
