@@ -16,45 +16,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-function detectCommandsFallback(text = "") {
-  const lines = text
-    .split(/[\.\!\?\n]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const pats = [
-    /\b(abram|abra|fechem|feche|copiem|copie|anotem|anote|fa[cç]am|fa[cç]a|respondam|responda|entreguem|entregue|leiam|leia|observem|observe|resolvam|resolva|formem|forme|guardem|guarde|tragam|traga|levantem|escutem)\b/i,
-    /\b(voc[eê]s precisam|precisam|vamos|deixem|organizem|separem)\b/i,
-  ];
-
-  return [...new Set(lines.filter((l) => pats.some((p) => p.test(l))))].slice(
-    0,
-    8
-  );
-}
-
-function detectPendingsFallback(text = "") {
-  const lines = text
-    .split(/[\.\!\?\n]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const pats = [
-    /\b(na proxima aula|para a proxima aula|vou trazer|vou fazer|vou enviar|vou entregar|precisam entregar|trazer|entregar|fazer|revisar|lembrar)\b/i,
-  ];
-
-  return [...new Set(lines.filter((l) => pats.some((p) => p.test(l))))].slice(
-    0,
-    8
-  );
-}
 
 function buildFallbackGagne() {
   const etapas = [
@@ -124,16 +91,13 @@ app.post("/analyze", upload.single("audio"), async (req, res) => {
       return res.json({
         transcript: "",
         tldr: "Nenhum conteúdo textual foi captado na aula.",
-        alerts: ["Transcrição vazia."],
         gagne: buildFallbackGagne(),
-        commands: [],
-        pendings: [],
         debug: "Transcrição vazia.",
       });
     }
 
     const prompt = `
-Você é um especialista em análise pedagógica de aulas baseado no modelo de Gagné (9 etapas).
+Você é um especialista em análise pedagógica de aulas baseado no modelo de Robert Gagné (9 etapas).
 
 Considere, quando existirem, os metadados fornecidos pelo professor:
 - Instituição
@@ -147,8 +111,7 @@ Analise a transcrição da aula abaixo e responda EXCLUSIVAMENTE em JSON válido
 
 Formato obrigatório:
 {
-  "tldr": "resumo curto em 1 frase",
-  "alerts": ["lista de 1 a 5 alertas relevantes"],
+  "tldr": "resumo curto em 1 frase, em português do Brasil",
   "gagne": [
     {
       "etapa": "Atenção",
@@ -204,9 +167,7 @@ Formato obrigatório:
       "avaliacao": "Adequado | Parcial | Ausente",
       "observacao": ""
     }
-  ],
-  "commands": [],
-  "pendings": []
+  ]
 }
 
 Regras:
@@ -237,20 +198,14 @@ ${transcript}
     } catch {
       parsed = {
         tldr: transcript.slice(0, 220) || "Sem resumo disponível.",
-        alerts: [],
         gagne: buildFallbackGagne(),
-        commands: detectCommandsFallback(transcript),
-        pendings: detectPendingsFallback(transcript),
       };
     }
 
     res.json({
       transcript,
       tldr: parsed.tldr || "Sem resumo disponível.",
-      alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
       gagne: Array.isArray(parsed.gagne) ? parsed.gagne : buildFallbackGagne(),
-      commands: Array.isArray(parsed.commands) ? parsed.commands : [],
-      pendings: Array.isArray(parsed.pendings) ? parsed.pendings : [],
       debug: "OK",
     });
   } catch (err) {
