@@ -57,7 +57,7 @@ function convertToWav(inputPath, outputPath) {
 }
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true, app: "Ouvidor.IA Premium" });
+  res.json({ ok: true, app: "Ouvidor.IA Premium V2" });
 });
 
 app.post("/analyze", upload.single("audio"), async (req, res) => {
@@ -99,15 +99,30 @@ app.post("/analyze", upload.single("audio"), async (req, res) => {
     const prompt = `
 Você é um especialista em análise pedagógica de aulas baseado no modelo de Robert Gagné (9 etapas).
 
-Considere, quando existirem, os metadados fornecidos pelo professor:
-- Instituição
-- Turma
-- Disciplina
-- Tema da aula
-- Aluno específico
-- Data
+Seu papel é analisar uma aula real com equilíbrio, rigor pedagógico e prudência.
+Não seja punitivo nem excessivamente positivo.
+Use somente evidências reais da transcrição.
+Se houver pouca evidência, marque como "Parcial" ou "Ausente", sem inventar.
 
-Analise a transcrição da aula abaixo e responda EXCLUSIVAMENTE em JSON válido.
+Considere, quando existirem, os metadados fornecidos pelo professor:
+- Instituição: ${req.body.institution || ""}
+- Ano Letivo: ${req.body.yearLevel || ""}
+- Turma: ${req.body.className || ""}
+- Disciplina: ${req.body.subject || ""}
+- Tema da aula: ${req.body.topic || ""}
+- Aluno específico: ${req.body.student || ""}
+- Data: ${req.body.date || ""}
+- Duração prevista do encontro (minutos): ${req.body.durationMinutes || ""}
+
+Regras:
+- Não invente fatos.
+- Use somente a transcrição real.
+- Seja técnico, direto e pedagógico.
+- Se algo não aparecer, não force interpretação.
+- Se houver indício fraco, prefira "Parcial".
+- Se não houver indício, marque "Ausente".
+- A duração prevista deve ajudar a contextualizar a análise. Uma aula curta não precisa apresentar a mesma profundidade de uma aula longa.
+- Responda somente em JSON válido, sem markdown e sem comentários.
 
 Formato obrigatório:
 {
@@ -170,16 +185,6 @@ Formato obrigatório:
   ]
 }
 
-Regras:
-- Não invente fatos.
-- Use somente a transcrição real.
-- Se algo não existir, marque como "Ausente".
-- Seja direto, técnico e pedagógico.
-- Responda somente com JSON válido, sem markdown.
-
-Metadados:
-${JSON.stringify(req.body || {}, null, 2)}
-
 Transcrição:
 ${transcript}
 `;
@@ -221,5 +226,5 @@ ${transcript}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Ouvidor.IA Premium on port ${port}`);
+  console.log(`Ouvidor.IA Premium V2 on port ${port}`);
 });
