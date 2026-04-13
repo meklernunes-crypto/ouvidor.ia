@@ -4,7 +4,11 @@ import multer from "multer";
 import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
+import ffmpeg from "fluent-ffmpeg";
+import ffmpegPath from "ffmpeg-static";
 import { fileURLToPath } from "url";
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +36,18 @@ function detectPendingsFallback(text = "") {
   return [...new Set(lines.filter(l => pats.some(p => p.test(l))))].slice(0, 8);
 }
 
+function convertToWav(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .audioChannels(1)
+      .audioFrequency(16000)
+      .format("wav")
+      .save(outputPath)
+      .on("end", resolve)
+      .on("error", reject);
+  });
+}
+
 app.get("/health", (req, res) => {
   res.json({ ok: true, app: "Ouvidor.IA Real v2" });
 });
@@ -44,10 +60,14 @@ app.post("/analyze", upload.single("audio"), async (req, res) => {
     return res.status(400).json({ error: "Áudio não recebido." });
   }
 
-  const filePath = req.file.path;
+  const inputPath = req.file.path;
+  const wavPath = `${req.file.path}.wav`;
+
   try {
+    await convertToWav(inputPath, wavPath);
+
     const transcription = await client.audio.transcriptions.create({
-      file: fs.createReadStream(filePath),
+      file: fs.createReadStream(wavPath),
       model: "whisper-1",
       language: "pt"
     });
@@ -93,6 +113,7 @@ ${transcript}
 
     const text = resp.output_text || "";
     let parsed;
+
     try {
       parsed = JSON.parse(text);
     } catch {
@@ -118,7 +139,8 @@ ${transcript}
       detail: String(err?.message || err)
     });
   } finally {
-    fs.unlink(filePath, () => {});
+    fs.unlink(inputPath, () => {});
+    fs.unlink(wavPath, () => {});
   }
 });
 
