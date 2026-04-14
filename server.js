@@ -57,7 +57,7 @@ function convertToWav(inputPath, outputPath) {
 }
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true, app: "Ouvidor.IA Premium V2" });
+  res.json({ ok: true, app: "Ouvidor.IA Premium V2.1" });
 });
 
 app.post("/analyze", upload.single("audio"), async (req, res) => {
@@ -105,14 +105,15 @@ Use somente evidências reais da transcrição.
 Se houver pouca evidência, marque como "Parcial" ou "Ausente", sem inventar.
 
 Considere, quando existirem, os metadados fornecidos pelo professor:
-- Instituição: ${req.body.institution || ""}
-- Ano Letivo: ${req.body.yearLevel || ""}
-- Turma: ${req.body.className || ""}
+- Local/Instituição: ${req.body.localInstitution || ""}
+- Ano/Semestre Letivo; Ciclo; Módulo: ${req.body.yearLevel || ""}
+- Identificação do Curso: ${req.body.courseId || ""}
+- Identificação da Turma: ${req.body.classId || ""}
 - Disciplina: ${req.body.subject || ""}
-- Tema da aula: ${req.body.topic || ""}
-- Aluno específico: ${req.body.student || ""}
-- Data: ${req.body.date || ""}
+- Tema/Objetivo do Encontro: ${req.body.topicObjective || ""}
+- Aluno(s) Específico(s): ${req.body.specificStudents || ""}
 - Duração prevista do encontro (minutos): ${req.body.durationMinutes || ""}
+- Data do sistema: ${req.body.systemDate || ""}
 
 Regras:
 - Não invente fatos.
@@ -226,5 +227,5 @@ ${transcript}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Ouvidor.IA Premium V2 on port ${port}`);
+  console.log(`Ouvidor.IA Premium V2.1 on port ${port}`);
 });
