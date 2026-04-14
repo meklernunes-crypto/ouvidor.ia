@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ouvidor.IA Premium V2</title>
+  <title>Ouvidor.IA Premium V2.1</title>
   <style>
     :root{
       --bg:#f7f9fc;
@@ -105,18 +105,24 @@
 
     .small{font-size:12px}
 
-    .checkbox-row{
-      margin-top:12px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:8px;
-      color:var(--muted);
+    .status-banner{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:700;
     }
 
-    .checkbox-row input{
-      width:auto;
-      margin:0;
+    .status-online{
+      background:#dcfce7;
+      color:#166534;
+      border:1px solid #bbf7d0;
+    }
+
+    .status-offline{
+      background:#fee2e2;
+      color:#991b1b;
+      border:1px solid #fecaca;
     }
 
     .grid{
@@ -215,41 +221,6 @@
       border-radius:12px;
     }
 
-    .table-wrap{
-      overflow:auto;
-      border-radius:16px;
-      border:1px solid var(--border);
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:760px;
-      background:#fff;
-    }
-
-    th,td{
-      padding:12px;
-      text-align:left;
-      vertical-align:top;
-      border-bottom:1px solid var(--border);
-      font-size:14px;
-    }
-
-    th{
-      background:#f8fafc;
-      color:#475569;
-      font-weight:700;
-    }
-
-    canvas{
-      width:100%;
-      height:220px;
-      background:#fff;
-      border-radius:14px;
-      border:1px solid var(--border);
-    }
-
     .audio-row{
       display:flex;
       gap:12px;
@@ -335,22 +306,6 @@
       margin-bottom:6px;
     }
 
-    .chips{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-
-    .chip{
-      background:#eef3ff;
-      border:1px solid #d9e4ff;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      color:#37507a;
-    }
-
     .top-line{
       display:flex;
       justify-content:space-between;
@@ -358,6 +313,32 @@
       gap:12px;
       flex-wrap:wrap;
     }
+
+    .gagne-block{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-soft);
+      padding:14px;
+      margin-bottom:10px;
+    }
+
+    .gagne-block strong{
+      display:block;
+      margin-bottom:8px;
+    }
+
+    .gagne-line{
+      margin-bottom:6px;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .pending-card{
+      border:2px dashed #cbd5e1;
+      background:#f8fafc;
+    }
+
+    .spacer-top{margin-top:12px}
   </style>
 </head>
 <body>
@@ -371,13 +352,11 @@
       <button id="stopBtn" class="danger" disabled>ENCERRAR AULA</button>
     </div>
 
-    <div class="checkbox-row">
-      <input type="checkbox" id="recordCheck" />
-      <label for="recordCheck">Gravar aula</label>
-    </div>
-
     <div id="timer" class="metric">00:00</div>
     <div id="status" class="muted">Aguardando início.</div>
+
+    <div id="connectionBanner" class="status-banner"></div>
+    <div id="pendingAnalyzeBox" class="spacer-top"></div>
   </div>
 
   <div class="card">
@@ -391,15 +370,15 @@
 
       <div class="field-grid">
         <div class="field">
-          <label>Instituição de Ensino</label>
+          <label>Local/Instituição</label>
           <div class="input-row">
-            <input id="cfgInstitution" placeholder="Ex.: Colégio Super" />
-            <button class="ghost mic-btn" data-voice="cfgInstitution">🎤</button>
+            <input id="cfgLocalInstitution" placeholder="Ex.: Colégio Super" />
+            <button class="ghost mic-btn" data-voice="cfgLocalInstitution">🎤</button>
           </div>
         </div>
 
         <div class="field">
-          <label>Ano Letivo</label>
+          <label>Ano/Semestre Letivo; Ciclo; Módulo</label>
           <div class="input-row">
             <input id="cfgYearLevel" placeholder="Ex.: 9º Ano Fund1 / 3º Ano Graduação / Infantil 3" />
             <button class="ghost mic-btn" data-voice="cfgYearLevel">🎤</button>
@@ -407,10 +386,18 @@
         </div>
 
         <div class="field">
-          <label>Nome da Turma</label>
+          <label>Identificação do Curso</label>
           <div class="input-row">
-            <input id="cfgClass" placeholder="Ex.: 3B" />
-            <button class="ghost mic-btn" data-voice="cfgClass">🎤</button>
+            <input id="cfgCourseId" placeholder="Ex.: Ensino Médio / Graduação em Administração" />
+            <button class="ghost mic-btn" data-voice="cfgCourseId">🎤</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Identificação da Turma</label>
+          <div class="input-row">
+            <input id="cfgClassId" placeholder="Ex.: 3B" />
+            <button class="ghost mic-btn" data-voice="cfgClassId">🎤</button>
           </div>
         </div>
 
@@ -423,34 +410,26 @@
         </div>
 
         <div class="field">
-          <label>Tema da Aula</label>
+          <label>Tema/Objetivo do Encontro</label>
           <div class="input-row">
-            <input id="cfgTopic" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" />
-            <button class="ghost mic-btn" data-voice="cfgTopic">🎤</button>
+            <input id="cfgTopicObjective" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" />
+            <button class="ghost mic-btn" data-voice="cfgTopicObjective">🎤</button>
           </div>
         </div>
 
         <div class="field">
-          <label>Aluno Específico</label>
+          <label>Aluno(s) Específico(s)</label>
           <div class="input-row">
-            <input id="cfgStudent" placeholder="João Pedro e Maria Izadora" />
-            <button class="ghost mic-btn" data-voice="cfgStudent">🎤</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Data</label>
-          <div class="input-row">
-            <input id="cfgDate" placeholder="10/Mar/2026" />
-            <button class="ghost mic-btn" data-voice="cfgDate">🎤</button>
+            <input id="cfgSpecificStudents" placeholder="Ex.: João Pedro e Maria Izadora" />
+            <button class="ghost mic-btn" data-voice="cfgSpecificStudents">🎤</button>
           </div>
         </div>
 
         <div class="field">
           <label>Duração do encontro (minutos)</label>
           <div class="input-row">
-            <input id="cfgDuration" placeholder="Ex.: 45 minutos" />
-            <button class="ghost mic-btn" data-voice="cfgDuration">🎤</button>
+            <input id="cfgDurationMinutes" placeholder="Ex.: 45 minutos" />
+            <button class="ghost mic-btn" data-voice="cfgDurationMinutes">🎤</button>
           </div>
         </div>
       </div>
@@ -463,14 +442,16 @@
     <div id="savedConfigPreview" class="small" style="margin-top:12px;">Nenhuma configuração prévia.</div>
   </div>
 
+  <div id="sessionActionBlock" class="hidden"></div>
   <div id="resultBlock" class="hidden"></div>
   <div id="historyBlock" class="hidden"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-  const STORAGE_KEY = "ouvidor_ia_premium_history_v4";
-  const CONFIG_KEY = "ouvidor_ia_premium_config_v4";
-  const AUDIO_DB_NAME = "ouvidor_ia_audio_db_v4";
+  const STORAGE_KEY = "ouvidor_ia_premium_history_v5";
+  const CONFIG_KEY = "ouvidor_ia_premium_config_v5";
+  const AUDIO_DB_NAME = "ouvidor_ia_audio_db_v5";
   const AUDIO_STORE = "audios";
 
   let recorder = null;
@@ -479,22 +460,15 @@
   let startTime = null;
   let timerInterval = null;
 
-  let audioContext = null;
-  let analyser = null;
-  let sourceNode = null;
-  let frameId = null;
-  let secondTimer = null;
-  let perSecondDb = [];
-  let currentSecondPeak = 25;
-  let currentRecorded = false;
-
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
   const timerEl = document.getElementById("timer");
   const statusEl = document.getElementById("status");
   const resultBlock = document.getElementById("resultBlock");
   const historyBlock = document.getElementById("historyBlock");
-  const recordCheck = document.getElementById("recordCheck");
+  const sessionActionBlock = document.getElementById("sessionActionBlock");
+  const connectionBanner = document.getElementById("connectionBanner");
+  const pendingAnalyzeBox = document.getElementById("pendingAnalyzeBox");
 
   const toggleConfigBtn = document.getElementById("toggleConfigBtn");
   const configBlock = document.getElementById("configBlock");
@@ -504,7 +478,6 @@
   function pad(n){ return String(n).padStart(2,"0"); }
   function fmtDuration(seconds){ const m=Math.floor(seconds/60), s=seconds%60; return `${pad(m)}:${pad(s)}`; }
   function escapeHtml(str=""){ return str.replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
-  function colorBand(db){ if(db <= 40) return {key:"Verde", cls:"green", text:"Ruído adequado"}; if(db <= 50) return {key:"Amarela", cls:"yellow", text:"Ruído moderado"}; return {key:"Vermelha", cls:"red", text:"Ruído elevado"}; }
   function getHistory(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
   function saveHistory(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 10))); }
   function getConfig(){ try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}"); } catch { return {}; } }
@@ -535,6 +508,40 @@
     el.style.background = socioColor(v);
   }
 
+  function bytesToMB(bytes = 0) {
+    return (bytes / (1024 * 1024)).toFixed(2);
+  }
+
+  function normalizePart(value, fallback) {
+    const clean = (value || "")
+      .toString()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase();
+    return clean || fallback;
+  }
+
+  function buildBaseName(record) {
+    const d = new Date(record.createdAt || Date.now());
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const cfg = record.config || {};
+
+    return [
+      `${yyyy}-${mm}-${dd}`,
+      normalizePart(cfg.localInstitution, "sem-local"),
+      normalizePart(cfg.yearLevel, "sem-ano-letivo"),
+      normalizePart(cfg.courseId, "sem-curso"),
+      normalizePart(cfg.classId, "sem-turma"),
+      normalizePart(cfg.subject, "sem-disciplina"),
+      normalizePart(cfg.topicObjective, "sem-tema")
+    ].join("__");
+  }
+
   function renderSlider(label, id, value) {
     return `
       <div class="range-wrap">
@@ -560,52 +567,40 @@
   function renderSavedConfigPreview() {
     const cfg = getConfig();
     const parts = [];
-    if (cfg.institution) parts.push(`Instituição: ${cfg.institution}`);
-    if (cfg.yearLevel) parts.push(`Ano Letivo: ${cfg.yearLevel}`);
-    if (cfg.className) parts.push(`Turma: ${cfg.className}`);
+    if (cfg.localInstitution) parts.push(`Local/Instituição: ${cfg.localInstitution}`);
+    if (cfg.yearLevel) parts.push(`Ano/Semestre Letivo; Ciclo; Módulo: ${cfg.yearLevel}`);
+    if (cfg.courseId) parts.push(`Curso: ${cfg.courseId}`);
+    if (cfg.classId) parts.push(`Turma: ${cfg.classId}`);
     if (cfg.subject) parts.push(`Disciplina: ${cfg.subject}`);
-    if (cfg.topic) parts.push(`Tema: ${cfg.topic}`);
-    if (cfg.student) parts.push(`Aluno: ${cfg.student}`);
-    if (cfg.date) parts.push(`Data: ${cfg.date}`);
+    if (cfg.topicObjective) parts.push(`Tema/Objetivo: ${cfg.topicObjective}`);
+    if (cfg.specificStudents) parts.push(`Aluno(s): ${cfg.specificStudents}`);
     if (cfg.durationMinutes) parts.push(`Duração: ${cfg.durationMinutes}`);
     savedConfigPreview.textContent = parts.length ? parts.join(" • ") : "Nenhuma configuração prévia.";
   }
 
   function loadConfigIntoFields(prefix = "cfg") {
     const cfg = getConfig();
-    document.getElementById(prefix + "Institution").value = cfg.institution || "";
+    document.getElementById(prefix + "LocalInstitution").value = cfg.localInstitution || "";
     document.getElementById(prefix + "YearLevel").value = cfg.yearLevel || "";
-    document.getElementById(prefix + "Class").value = cfg.className || "";
+    document.getElementById(prefix + "CourseId").value = cfg.courseId || "";
+    document.getElementById(prefix + "ClassId").value = cfg.classId || "";
     document.getElementById(prefix + "Subject").value = cfg.subject || "";
-    document.getElementById(prefix + "Topic").value = cfg.topic || "";
-    document.getElementById(prefix + "Student").value = cfg.student || "";
-    document.getElementById(prefix + "Date").value = cfg.date || "";
-    document.getElementById(prefix + "Duration").value = cfg.durationMinutes || "";
+    document.getElementById(prefix + "TopicObjective").value = cfg.topicObjective || "";
+    document.getElementById(prefix + "SpecificStudents").value = cfg.specificStudents || "";
+    document.getElementById(prefix + "DurationMinutes").value = cfg.durationMinutes || "";
   }
 
   function readConfigFromFields(prefix = "cfg") {
     return {
-      institution: document.getElementById(prefix + "Institution")?.value.trim() || "",
+      localInstitution: document.getElementById(prefix + "LocalInstitution")?.value.trim() || "",
       yearLevel: document.getElementById(prefix + "YearLevel")?.value.trim() || "",
-      className: document.getElementById(prefix + "Class")?.value.trim() || "",
+      courseId: document.getElementById(prefix + "CourseId")?.value.trim() || "",
+      classId: document.getElementById(prefix + "ClassId")?.value.trim() || "",
       subject: document.getElementById(prefix + "Subject")?.value.trim() || "",
-      topic: document.getElementById(prefix + "Topic")?.value.trim() || "",
-      student: document.getElementById(prefix + "Student")?.value.trim() || "",
-      date: document.getElementById(prefix + "Date")?.value.trim() || "",
-      durationMinutes: document.getElementById(prefix + "Duration")?.value.trim() || ""
+      topicObjective: document.getElementById(prefix + "TopicObjective")?.value.trim() || "",
+      specificStudents: document.getElementById(prefix + "SpecificStudents")?.value.trim() || "",
+      durationMinutes: document.getElementById(prefix + "DurationMinutes")?.value.trim() || ""
     };
-  }
-
-  function bucketByMinute(samples) {
-    const out = [];
-    if (!samples.length) return out;
-    const size = samples.length < 60 ? Math.max(5, Math.ceil(samples.length / Math.min(samples.length, 6))) : 60;
-    for (let i = 0; i < samples.length; i += size) {
-      const chunk = samples.slice(i, i + size);
-      const avg = Math.round(chunk.reduce((a, b) => a + b, 0) / chunk.length);
-      out.push(avg);
-    }
-    return out;
   }
 
   function drawLineChart(canvasId, samples, minDb = 0, maxDb = 100) {
@@ -614,7 +609,7 @@
 
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(320, Math.floor(rect.width * 2));
-    canvas.height = 440;
+    canvas.height = 300;
     const ctx = canvas.getContext("2d");
     const w = canvas.width;
     const h = canvas.height;
@@ -645,56 +640,6 @@
     samples.forEach((v, i) => {
       const x = 60 + (i / maxX) * (w - 100);
       const y = yFor(v);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-  }
-
-  function drawNoiseChart(canvasId, samples) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(320, Math.floor(rect.width * 2));
-    canvas.height = 440;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-
-    ctx.clearRect(0, 0, w, h);
-
-    const yForDb = (db) => h - ((db - 25) / (85 - 25)) * (h - 50) - 20;
-
-    [["rgba(22,163,74,.10)",25,40],["rgba(217,119,6,.10)",40,50],["rgba(220,38,38,.10)",50,85]].forEach(([color, from, to]) => {
-      const y1 = yForDb(to);
-      const y2 = yForDb(from);
-      ctx.fillStyle = color;
-      ctx.fillRect(50, y1, w - 70, y2 - y1);
-    });
-
-    ctx.strokeStyle = "#d7dfeb";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(50, 20);
-    ctx.lineTo(50, h - 30);
-    ctx.lineTo(w - 20, h - 30);
-    ctx.stroke();
-
-    if (!samples.length) {
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "20px Arial";
-      ctx.fillText("Sem dados suficientes para gráfico.", 70, h / 2);
-      return;
-    }
-
-    const maxX = samples.length - 1 || 1;
-    ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    samples.forEach((db, i) => {
-      const x = 60 + (i / maxX) * (w - 100);
-      const y = yForDb(db);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -753,10 +698,20 @@
     });
   }
 
+  async function deleteAudioBlob(id) {
+    const db = await openAudioDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(AUDIO_STORE, "readwrite");
+      tx.objectStore(AUDIO_STORE).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
   async function playAudio(id) {
     const blob = await getAudioBlob(id);
     if (!blob) {
-      alert("Esta aula não teve áudio salvo para reprodução.");
+      alert("Esta aula não tem gravação disponível.");
       return;
     }
     const url = URL.createObjectURL(blob);
@@ -764,16 +719,139 @@
     audio.play();
   }
 
-  function filteredHistory(filters) {
+  async function analyzeRecord(recordId) {
     const history = getHistory();
+    const idx = history.findIndex(x => x.id === recordId);
+    if (idx < 0) return;
+
+    const record = history[idx];
+    const blob = await getAudioBlob(record.id);
+
+    if (!blob) {
+      alert("Gravação não encontrada para análise.");
+      return;
+    }
+
+    if (!navigator.onLine) {
+      alert("Sem conexão. A análise poderá ser feita depois.");
+      return;
+    }
+
+    statusEl.textContent = "Analisando aula... Pode levar alguns minutos conforme o tamanho da gravação.";
+
+    const fd = new FormData();
+    fd.append("audio", blob, "aula.webm");
+    fd.append("localInstitution", record.config.localInstitution || "");
+    fd.append("yearLevel", record.config.yearLevel || "");
+    fd.append("courseId", record.config.courseId || "");
+    fd.append("classId", record.config.classId || "");
+    fd.append("subject", record.config.subject || "");
+    fd.append("topicObjective", record.config.topicObjective || "");
+    fd.append("specificStudents", record.config.specificStudents || "");
+    fd.append("durationMinutes", record.config.durationMinutes || "");
+    fd.append("systemDate", new Date(record.createdAt).toLocaleString("pt-BR"));
+
+    let data;
+    try {
+      const resp = await fetch("/analyze", { method: "POST", body: fd });
+      data = await resp.json();
+    } catch (e) {
+      data = {
+        error: "Falha ao conectar com o servidor.",
+        detail: String(e.message || e),
+      };
+    }
+
+    history[idx].transcript = data.transcript || "";
+    history[idx].tldr = data.tldr || "";
+    history[idx].gagne = data.gagne || [];
+    history[idx].analysisStatus = data.error ? "failed" : "analyzed";
+    history[idx].analyzedAt = new Date().toISOString();
+
+    saveHistory(history);
+    updateConnectionBanner();
+    renderSessionAction(null);
+    renderRecent(history[idx]);
+    renderHistory();
+
+    statusEl.textContent = "Análise concluída.";
+  }
+
+  function renderSessionAction(record) {
+    if (!record) {
+      sessionActionBlock.classList.add("hidden");
+      sessionActionBlock.innerHTML = "";
+      return;
+    }
+
+    sessionActionBlock.classList.remove("hidden");
+
+    if (!navigator.onLine) {
+      sessionActionBlock.innerHTML = `
+        <div class="card pending-card">
+          <h3>Gravação concluída</h3>
+          <div class="small">Sem conexão no momento. A aula foi gravada e ficou pendente de análise.</div>
+        </div>
+      `;
+      return;
+    }
+
+    sessionActionBlock.innerHTML = `
+      <div class="card pending-card">
+        <h3>Gravação concluída</h3>
+        <div class="small">Pode levar alguns minutos conforme o tamanho da gravação.</div>
+        <div class="controls">
+          <button class="primary" id="analyzeNowBtn">Fazer análise da aula</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("analyzeNowBtn").onclick = () => analyzeRecord(record.id);
+  }
+
+  function renderPendingButton() {
+    const pending = getHistory().filter(x => x.analysisStatus === "pending");
+    if (!pending.length || !navigator.onLine) {
+      pendingAnalyzeBox.innerHTML = "";
+      return;
+    }
+
+    const label = pending.length === 1 ? "Analisar aula pendente" : `Analisar aulas pendentes (${pending.length})`;
+
+    pendingAnalyzeBox.innerHTML = `
+      <button class="ghost" id="analyzePendingBtn">${label}</button>
+    `;
+
+    document.getElementById("analyzePendingBtn").onclick = async () => {
+      const list = getHistory().filter(x => x.analysisStatus === "pending");
+      for (const item of list) {
+        await analyzeRecord(item.id);
+      }
+    };
+  }
+
+  function updateConnectionBanner() {
+    if (navigator.onLine) {
+      connectionBanner.className = "status-banner status-online";
+      connectionBanner.textContent = "Conexão disponível.";
+    } else {
+      connectionBanner.className = "status-banner status-offline";
+      connectionBanner.textContent = "Sem conexão. A aula pode ser gravada normalmente e analisada depois.";
+    }
+    renderPendingButton();
+  }
+
+  function filteredHistory(filters) {
+    const history = getHistory().filter(x => x.analysisStatus === "analyzed");
     return history.filter((item) => {
       const cfg = item.config || {};
-      if (filters.institution && cfg.institution !== filters.institution) return false;
+      if (filters.localInstitution && cfg.localInstitution !== filters.localInstitution) return false;
       if (filters.yearLevel && cfg.yearLevel !== filters.yearLevel) return false;
-      if (filters.className && cfg.className !== filters.className) return false;
+      if (filters.courseId && cfg.courseId !== filters.courseId) return false;
+      if (filters.classId && cfg.classId !== filters.classId) return false;
       if (filters.subject && cfg.subject !== filters.subject) return false;
-      if (filters.topic && cfg.topic !== filters.topic) return false;
-      if (filters.student && cfg.student !== filters.student) return false;
+      if (filters.topicObjective && cfg.topicObjective !== filters.topicObjective) return false;
+      if (filters.specificStudents && cfg.specificStudents !== filters.specificStudents) return false;
       return true;
     });
   }
@@ -782,13 +860,99 @@
     return [...new Set(arr.map(x => x.config?.[key]).filter(Boolean))];
   }
 
-  function renderRecent(record) {
-    const band = colorBand(record.avgDb);
+  function renderGagneBlocks(gagne = []) {
+    if (!gagne.length) return `<div class="item">Sem análise pedagógica.</div>`;
 
+    return gagne.map((row, i) => `
+      <div class="gagne-block">
+        <strong>${i + 1}. ${escapeHtml(row.etapa || "")}</strong>
+        <div class="gagne-line"><strong>Evidência:</strong> ${escapeHtml(row.evidencia || "—")}</div>
+        <div class="gagne-line"><strong>Avaliação:</strong> ${escapeHtml(row.avaliacao || "—")}</div>
+        <div class="gagne-line"><strong>Observações:</strong> ${escapeHtml(row.observacao || "—")}</div>
+      </div>
+    `).join("");
+  }
+
+  async function deleteRecordingForRecord(recordId) {
+    const history = getHistory();
+    const idx = history.findIndex(x => x.id === recordId);
+    if (idx < 0) return;
+
+    const item = history[idx];
+    if (!item.recorded) return;
+
+    await deleteAudioBlob(recordId);
+    history[idx].recorded = false;
+    history[idx].audioSizeBytes = 0;
+    saveHistory(history);
+
+    renderRecent(history[idx]);
+    renderHistory();
+    alert("Gravação apagada.");
+  }
+
+  function generatePdf(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const baseName = buildBaseName(record);
+    const fileName = `${baseName}__analise.pdf`;
+
+    let y = 20;
+    const lineHeight = 7;
+    const pageWidth = 180;
+
+    function addWrapped(text, bold = false) {
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      const lines = doc.splitTextToSize(text, pageWidth);
+      doc.text(lines, 15, y);
+      y += lines.length * lineHeight + 2;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+
+    doc.setFontSize(16);
+    addWrapped("Relatório de análise da aula", true);
+    doc.setFontSize(11);
+
+    addWrapped(`Data do sistema: ${new Date(record.createdAt).toLocaleString("pt-BR")}`);
+    addWrapped(`Local/Instituição: ${record.config.localInstitution || "Não informado"}`);
+    addWrapped(`Ano/Semestre Letivo; Ciclo; Módulo: ${record.config.yearLevel || "Não informado"}`);
+    addWrapped(`Identificação do Curso: ${record.config.courseId || "Não informado"}`);
+    addWrapped(`Identificação da Turma: ${record.config.classId || "Não informado"}`);
+    addWrapped(`Disciplina: ${record.config.subject || "Não informado"}`);
+    addWrapped(`Tema/Objetivo do Encontro: ${record.config.topicObjective || "Não informado"}`);
+    addWrapped(`Aluno(s) Específico(s): ${record.config.specificStudents || "Não informado"}`);
+    addWrapped(`Duração prevista do encontro: ${record.config.durationMinutes || "Não informado"}`);
+    addWrapped(`Resumo rápido: ${record.tldr || "Sem resumo."}`);
+
+    addWrapped("Feedback — Padrão Robert Gagné", true);
+
+    (record.gagne || []).forEach((row, i) => {
+      addWrapped(`${i + 1}. ${row.etapa}`, true);
+      addWrapped(`Evidência: ${row.evidencia || "—"}`);
+      addWrapped(`Avaliação: ${row.avaliacao || "—"}`);
+      addWrapped(`Observações: ${row.observacao || "—"}`);
+    });
+
+    addWrapped("Sua auto-avaliação", true);
+    addWrapped(`Motivação prévia: ${record.socio?.motivacao ?? "-"}`);
+    addWrapped(`Satisfação final: ${record.socio?.satisfacao ?? "-"}`);
+    addWrapped(`Estado físico: ${record.socio?.fisico ?? "-"}`);
+    addWrapped(`Estado Emocional/Mental: ${record.socio?.mental ?? "-"}`);
+    addWrapped(`Infraestrutura funcionando: ${record.socio?.infraestrutura ?? "-"}`);
+
+    doc.save(fileName);
+  }
+
+  function renderRecent(record) {
     resultBlock.classList.remove("hidden");
+    const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação salva";
+
     resultBlock.innerHTML = `
       <div class="card">
-        <h2>Resumo da aula recém gravada</h2>
+        <h2>Análise da aula</h2>
         <div class="small">${new Date(record.createdAt).toLocaleString("pt-BR")}</div>
       </div>
 
@@ -799,45 +963,7 @@
 
       <div class="card">
         <h3>Feedback — Padrão Robert Gagné</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Etapa</th>
-                <th>Evidência</th>
-                <th>Avaliação</th>
-                <th>Observação</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                record.gagne?.length
-                  ? record.gagne.map(row => `
-                    <tr>
-                      <td>${escapeHtml(row.etapa || "")}</td>
-                      <td>${escapeHtml(row.evidencia || "")}</td>
-                      <td>${escapeHtml(row.avaliacao || "")}</td>
-                      <td>${escapeHtml(row.observacao || "")}</td>
-                    </tr>
-                  `).join("")
-                  : `<tr><td colspan="4">Sem análise pedagógica.</td></tr>`
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Ruído da gravação</h3>
-        <div class="item" style="margin-bottom:12px;">${band.key} — ${band.text}</div>
-        <canvas id="recentNoiseChart"></canvas>
-      </div>
-
-      <div class="card">
-        <div class="top-line">
-          <h3 style="margin:0;">Ouvir gravação</h3>
-          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
-        </div>
+        ${renderGagneBlocks(record.gagne || [])}
       </div>
 
       <div class="card">
@@ -851,15 +977,15 @@
 
           <div class="field-grid">
             <div class="field">
-              <label>Instituição</label>
+              <label>Local/Instituição</label>
               <div class="input-row">
-                <input id="postInstitution" placeholder="Ex.: Colégio Super" value="${escapeHtml(record.config.institution || "")}" />
-                <button class="ghost mic-btn" data-voice="postInstitution">🎤</button>
+                <input id="postLocalInstitution" placeholder="Ex.: Colégio Super" value="${escapeHtml(record.config.localInstitution || "")}" />
+                <button class="ghost mic-btn" data-voice="postLocalInstitution">🎤</button>
               </div>
             </div>
 
             <div class="field">
-              <label>Ano Letivo</label>
+              <label>Ano/Semestre Letivo; Ciclo; Módulo</label>
               <div class="input-row">
                 <input id="postYearLevel" placeholder="Ex.: 9º Ano Fund1 / 3º Ano Graduação / Infantil 3" value="${escapeHtml(record.config.yearLevel || "")}" />
                 <button class="ghost mic-btn" data-voice="postYearLevel">🎤</button>
@@ -867,10 +993,18 @@
             </div>
 
             <div class="field">
-              <label>Turma</label>
+              <label>Identificação do Curso</label>
               <div class="input-row">
-                <input id="postClass" placeholder="Ex.: 3B" value="${escapeHtml(record.config.className || "")}" />
-                <button class="ghost mic-btn" data-voice="postClass">🎤</button>
+                <input id="postCourseId" placeholder="Ex.: Ensino Médio / Graduação em Administração" value="${escapeHtml(record.config.courseId || "")}" />
+                <button class="ghost mic-btn" data-voice="postCourseId">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Identificação da Turma</label>
+              <div class="input-row">
+                <input id="postClassId" placeholder="Ex.: 3B" value="${escapeHtml(record.config.classId || "")}" />
+                <button class="ghost mic-btn" data-voice="postClassId">🎤</button>
               </div>
             </div>
 
@@ -883,34 +1017,26 @@
             </div>
 
             <div class="field">
-              <label>Tema</label>
+              <label>Tema/Objetivo do Encontro</label>
               <div class="input-row">
-                <input id="postTopic" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" value="${escapeHtml(record.config.topic || "")}" />
-                <button class="ghost mic-btn" data-voice="postTopic">🎤</button>
+                <input id="postTopicObjective" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" value="${escapeHtml(record.config.topicObjective || "")}" />
+                <button class="ghost mic-btn" data-voice="postTopicObjective">🎤</button>
               </div>
             </div>
 
             <div class="field">
-              <label>Aluno</label>
+              <label>Aluno(s) Específico(s)</label>
               <div class="input-row">
-                <input id="postStudent" placeholder="João Pedro e Maria Izadora" value="${escapeHtml(record.config.student || "")}" />
-                <button class="ghost mic-btn" data-voice="postStudent">🎤</button>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Data</label>
-              <div class="input-row">
-                <input id="postDate" placeholder="10/Mar/2026" value="${escapeHtml(record.config.date || "")}" />
-                <button class="ghost mic-btn" data-voice="postDate">🎤</button>
+                <input id="postSpecificStudents" placeholder="Ex.: João Pedro e Maria Izadora" value="${escapeHtml(record.config.specificStudents || "")}" />
+                <button class="ghost mic-btn" data-voice="postSpecificStudents">🎤</button>
               </div>
             </div>
 
             <div class="field">
               <label>Duração do encontro (minutos)</label>
               <div class="input-row">
-                <input id="postDuration" placeholder="Ex.: 45 minutos" value="${escapeHtml(record.config.durationMinutes || "")}" />
-                <button class="ghost mic-btn" data-voice="postDuration">🎤</button>
+                <input id="postDurationMinutes" placeholder="Ex.: 45 minutos" value="${escapeHtml(record.config.durationMinutes || "")}" />
+                <button class="ghost mic-btn" data-voice="postDurationMinutes">🎤</button>
               </div>
             </div>
           </div>
@@ -924,21 +1050,28 @@
         ${renderSlider("Estado físico", "fisico", record.socio.fisico)}
         ${renderSlider("Estado Emocional/Mental", "mental", record.socio.mental)}
         ${renderSlider("Infraestrutura funcionando", "infraestrutura", record.socio.infraestrutura)}
+      </div>
+
+      <div class="card">
+        <div class="top-line">
+          <strong>Arquivos e ações</strong>
+        </div>
+        <div class="small" style="margin:10px 0 14px;">Arquivo de gravação: ${audioSizeLabel}</div>
         <div class="controls">
-          <button class="ghost" id="saveAfterBtn">Salvar dados desta aula</button>
+          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
+          <button class="ghost" id="savePdfBtn">Salvar PDF da análise</button>
+          <button class="ghost" id="deleteAudioBtn" ${record.recorded ? "" : "disabled"}>Apagar gravação (${audioSizeLabel})</button>
+          <button class="ghost" id="saveAfterBtn">Salvar ajustes</button>
         </div>
       </div>
     `;
 
-    setTimeout(() => drawNoiseChart("recentNoiseChart", record.perSecondDb.length < 60 ? record.perSecondDb : record.minuteSamples), 50);
     setTimeout(() => {
       ["motivacao","satisfacao","fisico","mental","infraestrutura"].forEach(id => {
         const el = document.getElementById("sl-" + id);
         if (el) applyRangeColor(el);
       });
     }, 0);
-
-    document.getElementById("playCurrentAudioBtn").onclick = () => playAudio(record.id);
 
     document.getElementById("toggleRefineBtn").onclick = () => {
       document.getElementById("refineBlock").classList.toggle("hidden");
@@ -948,20 +1081,24 @@
       btn.onclick = () => openVoiceForInput(btn.getAttribute("data-voice"));
     });
 
+    document.getElementById("playCurrentAudioBtn").onclick = () => playAudio(record.id);
+    document.getElementById("savePdfBtn").onclick = () => generatePdf(record);
+    document.getElementById("deleteAudioBtn").onclick = () => deleteRecordingForRecord(record.id);
+
     document.getElementById("saveAfterBtn").onclick = () => {
       const history = getHistory();
       const idx = history.findIndex(x => x.id === record.id);
       if (idx < 0) return;
 
       history[idx].config = {
-        institution: document.getElementById("postInstitution").value.trim(),
+        localInstitution: document.getElementById("postLocalInstitution").value.trim(),
         yearLevel: document.getElementById("postYearLevel").value.trim(),
-        className: document.getElementById("postClass").value.trim(),
+        courseId: document.getElementById("postCourseId").value.trim(),
+        classId: document.getElementById("postClassId").value.trim(),
         subject: document.getElementById("postSubject").value.trim(),
-        topic: document.getElementById("postTopic").value.trim(),
-        student: document.getElementById("postStudent").value.trim(),
-        date: document.getElementById("postDate").value.trim(),
-        durationMinutes: document.getElementById("postDuration").value.trim()
+        topicObjective: document.getElementById("postTopicObjective").value.trim(),
+        specificStudents: document.getElementById("postSpecificStudents").value.trim(),
+        durationMinutes: document.getElementById("postDurationMinutes").value.trim()
       };
 
       history[idx].socio = {
@@ -981,21 +1118,22 @@
   }
 
   function renderHistory() {
-    const history = getHistory();
+    const history = getHistory().filter(x => x.analysisStatus === "analyzed");
     historyBlock.classList.remove("hidden");
 
     if (!history.length) {
-      historyBlock.innerHTML = `<div class="card"><h2>Seu Histórico</h2><div class="small">Ainda não há aulas no histórico.</div></div>`;
+      historyBlock.innerHTML = `<div class="card"><h2>Seu Histórico</h2><div class="small">Ainda não há análises no histórico.</div></div>`;
       return;
     }
 
     const all = history;
-    const institutionValues = uniqueValues(all, "institution");
+    const localInstitutionValues = uniqueValues(all, "localInstitution");
     const yearLevelValues = uniqueValues(all, "yearLevel");
-    const classValues = uniqueValues(all, "className");
+    const courseIdValues = uniqueValues(all, "courseId");
+    const classIdValues = uniqueValues(all, "classId");
     const subjectValues = uniqueValues(all, "subject");
-    const topicValues = uniqueValues(all, "topic");
-    const studentValues = uniqueValues(all, "student");
+    const topicObjectiveValues = uniqueValues(all, "topicObjective");
+    const specificStudentsValues = uniqueValues(all, "specificStudents");
 
     historyBlock.innerHTML = `
       <div class="card">
@@ -1006,25 +1144,19 @@
 
         <div id="historyContent" class="hidden" style="margin-top:16px;">
           <div class="grid">
-            <div class="col-6 card clickable" id="cardAmbiental">
-              <h3>Fatores ambientais</h3>
-              <canvas id="chartAmbiental"></canvas>
-              <div id="detailAmbiental" class="small hidden" style="margin-top:10px;"></div>
-            </div>
-
-            <div class="col-6 card clickable" id="cardConducao">
+            <div class="col-4 card clickable" id="cardConducao">
               <h3>Fatores de condução</h3>
               <canvas id="chartConducao"></canvas>
               <div id="detailConducao" class="small hidden" style="margin-top:10px;"></div>
             </div>
 
-            <div class="col-6 card clickable" id="cardPedagogico">
+            <div class="col-4 card clickable" id="cardPedagogico">
               <h3>Fatores pedagógicos</h3>
               <canvas id="chartPedagogico"></canvas>
               <div id="detailPedagogico" class="small hidden" style="margin-top:10px;"></div>
             </div>
 
-            <div class="col-6 card clickable" id="cardSocio">
+            <div class="col-4 card clickable" id="cardSocio">
               <h3>Fatores socioemocionais</h3>
               <canvas id="chartSocio"></canvas>
               <div id="detailSocio" class="small hidden" style="margin-top:10px;"></div>
@@ -1037,12 +1169,13 @@
 
           <div id="filtersBlock" class="hidden">
             <div class="filter-grid">
-              ${renderFilterSelect("fInstitution", "Instituição", institutionValues)}
-              ${renderFilterSelect("fYearLevel", "Ano Letivo", yearLevelValues)}
-              ${renderFilterSelect("fClass", "Turma", classValues)}
+              ${renderFilterSelect("fLocalInstitution", "Local/Instituição", localInstitutionValues)}
+              ${renderFilterSelect("fYearLevel", "Ano/Semestre Letivo; Ciclo; Módulo", yearLevelValues)}
+              ${renderFilterSelect("fCourseId", "Identificação do Curso", courseIdValues)}
+              ${renderFilterSelect("fClassId", "Identificação da Turma", classIdValues)}
               ${renderFilterSelect("fSubject", "Disciplina", subjectValues)}
-              ${renderFilterSelect("fTopic", "Tema", topicValues)}
-              ${renderFilterSelect("fStudent", "Aluno", studentValues)}
+              ${renderFilterSelect("fTopicObjective", "Tema/Objetivo do Encontro", topicObjectiveValues)}
+              ${renderFilterSelect("fSpecificStudents", "Aluno(s) Específico(s)", specificStudentsValues)}
             </div>
           </div>
 
@@ -1079,17 +1212,17 @@
   function wireHistory() {
     const update = () => {
       const filters = {
-        institution: document.getElementById("fInstitution").value,
+        localInstitution: document.getElementById("fLocalInstitution").value,
         yearLevel: document.getElementById("fYearLevel").value,
-        className: document.getElementById("fClass").value,
+        courseId: document.getElementById("fCourseId").value,
+        classId: document.getElementById("fClassId").value,
         subject: document.getElementById("fSubject").value,
-        topic: document.getElementById("fTopic").value,
-        student: document.getElementById("fStudent").value,
+        topicObjective: document.getElementById("fTopicObjective").value,
+        specificStudents: document.getElementById("fSpecificStudents").value,
       };
 
       const items = filteredHistory(filters);
 
-      const ambiental = items.map(x => x.avgDb || 0);
       const conducao = items.map(x => computeConductionScore(x.gagne || []));
       const pedagogico = items.map(x => scoreGagne(x.gagne || []));
       const socio = items.map(x => avg([
@@ -1100,13 +1233,10 @@
         x.socio?.infraestrutura || 0
       ]));
 
-      drawNoiseChart("chartAmbiental", ambiental);
       drawLineChart("chartConducao", conducao, 0, 100);
       drawLineChart("chartPedagogico", pedagogico, 0, 100);
       drawLineChart("chartSocio", socio, 1, 10);
 
-      document.getElementById("detailAmbiental").textContent =
-        items.length ? `Média filtrada: ${avg(ambiental)} dB(A).` : "Sem dados para o filtro aplicado.";
       document.getElementById("detailConducao").textContent =
         items.length ? `Média de condução: ${avg(conducao)}.` : "Sem dados para o filtro aplicado.";
       document.getElementById("detailPedagogico").textContent =
@@ -1118,12 +1248,13 @@
       list.innerHTML = items.length
         ? items.map(item => {
             const details = [];
-            if (item.config?.institution) details.push(item.config.institution);
+            if (item.config?.localInstitution) details.push(item.config.localInstitution);
             if (item.config?.yearLevel) details.push(item.config.yearLevel);
-            if (item.config?.className) details.push(item.config.className);
+            if (item.config?.courseId) details.push(item.config.courseId);
+            if (item.config?.classId) details.push(item.config.classId);
             if (item.config?.subject) details.push(item.config.subject);
-            if (item.config?.topic) details.push(item.config.topic);
-            if (item.config?.student) details.push(item.config.student);
+            if (item.config?.topicObjective) details.push(item.config.topicObjective);
+            if (item.config?.specificStudents) details.push(item.config.specificStudents);
 
             return `
               <div class="item clickable" data-open-record="${item.id}">
@@ -1143,11 +1274,11 @@
       document.getElementById("filtersBlock").classList.toggle("hidden");
     };
 
-    ["fInstitution","fYearLevel","fClass","fSubject","fTopic","fStudent"].forEach(id => {
+    ["fLocalInstitution","fYearLevel","fCourseId","fClassId","fSubject","fTopicObjective","fSpecificStudents"].forEach(id => {
       document.getElementById(id).onchange = update;
     });
 
-    ["Ambiental","Conducao","Pedagogico","Socio"].forEach(name => {
+    ["Conducao","Pedagogico","Socio"].forEach(name => {
       document.getElementById("card" + name).onclick = () => {
         document.getElementById("detail" + name).classList.toggle("hidden");
       };
@@ -1157,22 +1288,21 @@
   }
 
   function openHistoryRecord(id) {
-    const history = getHistory();
+    const history = getHistory().filter(x => x.analysisStatus === "analyzed");
     const record = history.find(x => x.id === id);
     if (!record) return;
 
     const target = document.getElementById("historyLessonDetail");
     if (!target) return;
 
-    const band = colorBand(record.avgDb);
-
     const details = [];
-    if (record.config?.institution) details.push(record.config.institution);
+    if (record.config?.localInstitution) details.push(record.config.localInstitution);
     if (record.config?.yearLevel) details.push(record.config.yearLevel);
-    if (record.config?.className) details.push(record.config.className);
+    if (record.config?.courseId) details.push(record.config.courseId);
+    if (record.config?.classId) details.push(record.config.classId);
     if (record.config?.subject) details.push(record.config.subject);
-    if (record.config?.topic) details.push(record.config.topic);
-    if (record.config?.student) details.push(record.config.student);
+    if (record.config?.topicObjective) details.push(record.config.topicObjective);
+    if (record.config?.specificStudents) details.push(record.config.specificStudents);
     if (record.config?.durationMinutes) details.push(record.config.durationMinutes);
 
     target.classList.remove("hidden");
@@ -1182,38 +1312,20 @@
       <div class="small" style="margin-bottom:12px;">${details.length ? escapeHtml(details.join(" / ")) : "Detalhes não informados"}</div>
 
       <div class="item" style="margin-bottom:12px;"><strong>Resumo rápido:</strong> ${escapeHtml(record.tldr || "Sem resumo.")}</div>
-      <div class="item" style="margin-bottom:12px;"><strong>Ruído:</strong> ${band.key} — ${band.text}</div>
 
-      <div class="table-wrap" style="margin-bottom:12px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Etapa</th>
-              <th>Evidência</th>
-              <th>Avaliação</th>
-              <th>Observação</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(record.gagne || []).map(row => `
-              <tr>
-                <td>${escapeHtml(row.etapa || "")}</td>
-                <td>${escapeHtml(row.evidencia || "")}</td>
-                <td>${escapeHtml(row.avaliacao || "")}</td>
-                <td>${escapeHtml(row.observacao || "")}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
+      <div class="card" style="padding:0;box-shadow:none;border:none;margin-bottom:12px;">
+        ${renderGagneBlocks(record.gagne || [])}
       </div>
 
       <div class="audio-row">
         <button class="ghost" id="playHistoryAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
+        <button class="ghost" id="saveHistoryPdfBtn">Salvar PDF da análise</button>
         <button class="ghost" id="closeHistoryDetailBtn">Fechar</button>
       </div>
     `;
 
     document.getElementById("playHistoryAudioBtn").onclick = () => playAudio(record.id);
+    document.getElementById("saveHistoryPdfBtn").onclick = () => generatePdf(record);
     document.getElementById("closeHistoryDetailBtn").onclick = () => {
       target.classList.add("hidden");
       target.innerHTML = "";
@@ -1223,12 +1335,10 @@
   }
 
   async function startRecording() {
+    sessionActionBlock.classList.add("hidden");
     resultBlock.classList.add("hidden");
     historyBlock.classList.add("hidden");
     chunks = [];
-    perSecondDb = [];
-    currentSecondPeak = 25;
-    currentRecorded = recordCheck.checked;
 
     stream = await navigator.mediaDevices.getUserMedia({
       audio: {
@@ -1251,97 +1361,34 @@
     startTime = Date.now();
     startBtn.disabled = true;
     stopBtn.disabled = false;
-    statusEl.textContent = "Captando aula...";
+    statusEl.textContent = "Gravando aula...";
 
     timerInterval = setInterval(() => {
       timerEl.textContent = fmtDuration(Math.floor((Date.now() - startTime) / 1000));
     }, 500);
-
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    await audioContext.resume();
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.2;
-    sourceNode = audioContext.createMediaStreamSource(stream);
-    sourceNode.connect(analyser);
-
-    const data = new Float32Array(analyser.fftSize);
-
-    function tick() {
-      analyser.getFloatTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
-      const rms = Math.sqrt(sum / data.length);
-      let db = 35 + (Math.min(1, rms * 20) * 40);
-      db = Math.round(Math.max(25, Math.min(85, db)));
-      if (db > currentSecondPeak) currentSecondPeak = db;
-      frameId = requestAnimationFrame(tick);
-    }
-
-    frameId = requestAnimationFrame(tick);
-
-    secondTimer = setInterval(() => {
-      perSecondDb.push(currentSecondPeak);
-      currentSecondPeak = 25;
-      statusEl.textContent = `Captando aula... Ruído atual ${perSecondDb[perSecondDb.length - 1]} dB(A)`;
-    }, 1000);
   }
 
   async function stopRecording() {
     stopBtn.disabled = true;
-    statusEl.textContent = "Processando com IA...";
+    statusEl.textContent = "Finalizando gravação...";
 
     recorder.stop();
 
     recorder.onstop = async () => {
       clearInterval(timerInterval);
-      cancelAnimationFrame(frameId);
-      clearInterval(secondTimer);
 
       stream.getTracks().forEach((t) => t.stop());
 
       const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
       const cfg = getConfig();
 
-      const fd = new FormData();
-      fd.append("audio", blob, "aula.webm");
-      fd.append("institution", cfg.institution || "");
-      fd.append("yearLevel", cfg.yearLevel || "");
-      fd.append("className", cfg.className || "");
-      fd.append("subject", cfg.subject || "");
-      fd.append("topic", cfg.topic || "");
-      fd.append("student", cfg.student || "");
-      fd.append("date", cfg.date || "");
-      fd.append("durationMinutes", cfg.durationMinutes || "");
-
-      let data;
-      try {
-        const resp = await fetch("/analyze", { method: "POST", body: fd });
-        data = await resp.json();
-      } catch (e) {
-        data = {
-          error: "Falha ao conectar com o servidor.",
-          detail: String(e.message || e),
-        };
-      }
-
-      const durationSec = Math.max(1, Math.floor((Date.now() - startTime) / 1000));
-      const minuteSamples = bucketByMinute(perSecondDb);
-      const avgDb = minuteSamples.length ? Math.round(minuteSamples.reduce((a,b)=>a+b,0)/minuteSamples.length) : 0;
-      const peakDb = perSecondDb.length ? Math.max(...perSecondDb) : 0;
-
       const record = {
         id: "aula_" + Date.now(),
         createdAt: new Date().toISOString(),
         config: cfg,
-        durationSec,
-        avgDb,
-        peakDb,
-        perSecondDb,
-        minuteSamples,
-        transcript: data.transcript || "",
-        tldr: data.tldr || "",
-        gagne: data.gagne || [],
+        transcript: "",
+        tldr: "",
+        gagne: [],
         socio: {
           motivacao: 5,
           satisfacao: 5,
@@ -1349,24 +1396,27 @@
           mental: 5,
           infraestrutura: 5
         },
-        recorded: currentRecorded
+        recorded: true,
+        audioSizeBytes: blob.size,
+        analysisStatus: navigator.onLine ? "recorded" : "pending"
       };
 
-      if (currentRecorded) {
-        await saveAudioBlob(record.id, blob);
-      }
+      await saveAudioBlob(record.id, blob);
 
       const history = getHistory();
       history.unshift(record);
       saveHistory(history);
 
-      renderRecent(record);
+      renderSessionAction(record);
       renderHistory();
+      updateConnectionBanner();
 
       timerEl.textContent = "00:00";
-      statusEl.textContent = "Aula encerrada.";
+      statusEl.textContent = navigator.onLine
+        ? "Gravação concluída."
+        : "Gravação concluída. A análise ficou pendente por falta de conexão.";
+
       startBtn.disabled = false;
-      recordCheck.checked = false;
     };
   }
 
@@ -1386,12 +1436,16 @@
     if (btn) openVoiceForInput(btn.getAttribute("data-voice"));
   });
 
+  window.addEventListener("online", updateConnectionBanner);
+  window.addEventListener("offline", updateConnectionBanner);
+
   startBtn.onclick = startRecording;
   stopBtn.onclick = stopRecording;
 
   loadConfigIntoFields("cfg");
   renderSavedConfigPreview();
   renderHistory();
+  updateConnectionBanner();
 </script>
 </body>
 </html>
