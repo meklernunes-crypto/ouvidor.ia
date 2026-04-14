@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ouvidor.IA Premium V2.1</title>
+  <title>Ouvidor.IA Premium V2.2</title>
   <style>
     :root{
       --bg:#f7f9fc;
@@ -157,18 +157,6 @@
       background:var(--panel-soft);
     }
 
-    .tag{
-      display:inline-block;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .green{background:#dcfce7;color:#166534}
-    .yellow{background:#fef3c7;color:#92400e}
-    .red{background:#fee2e2;color:#991b1b}
-
     .hidden{display:none}
 
     .field-grid{
@@ -277,27 +265,17 @@
 
     .filter-grid{
       display:grid;
-      grid-template-columns:repeat(6,1fr);
+      grid-template-columns:repeat(7,1fr);
       gap:12px;
       margin-top:16px;
     }
 
-    @media(max-width:1000px){
+    @media(max-width:1100px){
       .filter-grid{grid-template-columns:repeat(3,1fr)}
     }
 
     @media(max-width:700px){
       .filter-grid{grid-template-columns:1fr}
-    }
-
-    .clickable{
-      cursor:pointer;
-      transition:transform .12s ease, border-color .12s ease;
-    }
-
-    .clickable:hover{
-      transform:translateY(-1px);
-      border-color:#b9c7db;
     }
 
     .history-title{
@@ -339,6 +317,26 @@
     }
 
     .spacer-top{margin-top:12px}
+
+    .chart-card h3{
+      margin-top:0;
+      margin-bottom:12px;
+      font-size:16px;
+    }
+
+    .chart-wrap{
+      width:100%;
+      overflow:hidden;
+    }
+
+    canvas{
+      width:100%;
+      height:260px;
+      background:#fff;
+      border-radius:14px;
+      border:1px solid var(--border);
+      display:block;
+    }
   </style>
 </head>
 <body>
@@ -449,9 +447,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-  const STORAGE_KEY = "ouvidor_ia_premium_history_v5";
-  const CONFIG_KEY = "ouvidor_ia_premium_config_v5";
-  const AUDIO_DB_NAME = "ouvidor_ia_audio_db_v5";
+  const STORAGE_KEY = "ouvidor_ia_premium_history_v6";
+  const CONFIG_KEY = "ouvidor_ia_premium_config_v6";
+  const AUDIO_DB_NAME = "ouvidor_ia_audio_db_v6";
   const AUDIO_STORE = "audios";
 
   let recorder = null;
@@ -479,34 +477,10 @@
   function fmtDuration(seconds){ const m=Math.floor(seconds/60), s=seconds%60; return `${pad(m)}:${pad(s)}`; }
   function escapeHtml(str=""){ return str.replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
   function getHistory(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
-  function saveHistory(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 10))); }
+  function saveHistory(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0, 200))); }
   function getConfig(){ try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}"); } catch { return {}; } }
   function saveConfig(obj){ localStorage.setItem(CONFIG_KEY, JSON.stringify(obj)); }
-  function avg(arr){ return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0; }
-
-  function scoreGagne(gagne = []) {
-    if (!gagne.length) return 0;
-    const map = { Adequado: 2, Parcial: 1, Ausente: 0 };
-    const total = gagne.reduce((s, x) => s + (map[x.avaliacao] ?? 0), 0);
-    return Math.round((total / (gagne.length * 2)) * 100);
-  }
-
-  function computeConductionScore(gagne = []) {
-    const alvo = ["Orientação", "Prática", "Feedback", "Avaliação"];
-    const rows = gagne.filter(x => alvo.includes(x.etapa));
-    return scoreGagne(rows);
-  }
-
-  function socioColor(value) {
-    if (value <= 3) return "#ef4444";
-    if (value <= 7) return "#eab308";
-    return "#22c55e";
-  }
-
-  function applyRangeColor(el) {
-    const v = Number(el.value || 5);
-    el.style.background = socioColor(v);
-  }
+  function avg(arr){ return arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : 0; }
 
   function bytesToMB(bytes = 0) {
     return (bytes / (1024 * 1024)).toFixed(2);
@@ -564,6 +538,11 @@
     `;
   }
 
+  function applyRangeColor(el) {
+    const v = Number(el.value || 5);
+    el.style.background = v <= 3 ? "#ef4444" : (v <= 7 ? "#eab308" : "#22c55e");
+  }
+
   function renderSavedConfigPreview() {
     const cfg = getConfig();
     const parts = [];
@@ -601,49 +580,6 @@
       specificStudents: document.getElementById(prefix + "SpecificStudents")?.value.trim() || "",
       durationMinutes: document.getElementById(prefix + "DurationMinutes")?.value.trim() || ""
     };
-  }
-
-  function drawLineChart(canvasId, samples, minDb = 0, maxDb = 100) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(320, Math.floor(rect.width * 2));
-    canvas.height = 300;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-
-    ctx.clearRect(0, 0, w, h);
-
-    const yFor = (v) => h - ((v - minDb) / (maxDb - minDb || 1)) * (h - 50) - 20;
-
-    ctx.strokeStyle = "#d7dfeb";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(50, 20);
-    ctx.lineTo(50, h - 30);
-    ctx.lineTo(w - 20, h - 30);
-    ctx.stroke();
-
-    if (!samples.length) {
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "20px Arial";
-      ctx.fillText("Sem dados suficientes para gráfico.", 70, h / 2);
-      return;
-    }
-
-    const maxX = samples.length - 1 || 1;
-    ctx.strokeStyle = "#2563eb";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    samples.forEach((v, i) => {
-      const x = 60 + (i / maxX) * (w - 100);
-      const y = yFor(v);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
   }
 
   function openVoiceForInput(inputId) {
@@ -839,25 +775,6 @@
       connectionBanner.textContent = "Sem conexão. A aula pode ser gravada normalmente e analisada depois.";
     }
     renderPendingButton();
-  }
-
-  function filteredHistory(filters) {
-    const history = getHistory().filter(x => x.analysisStatus === "analyzed");
-    return history.filter((item) => {
-      const cfg = item.config || {};
-      if (filters.localInstitution && cfg.localInstitution !== filters.localInstitution) return false;
-      if (filters.yearLevel && cfg.yearLevel !== filters.yearLevel) return false;
-      if (filters.courseId && cfg.courseId !== filters.courseId) return false;
-      if (filters.classId && cfg.classId !== filters.classId) return false;
-      if (filters.subject && cfg.subject !== filters.subject) return false;
-      if (filters.topicObjective && cfg.topicObjective !== filters.topicObjective) return false;
-      if (filters.specificStudents && cfg.specificStudents !== filters.specificStudents) return false;
-      return true;
-    });
-  }
-
-  function uniqueValues(arr, key) {
-    return [...new Set(arr.map(x => x.config?.[key]).filter(Boolean))];
   }
 
   function renderGagneBlocks(gagne = []) {
@@ -1144,22 +1061,39 @@
 
         <div id="historyContent" class="hidden" style="margin-top:16px;">
           <div class="grid">
-            <div class="col-4 card clickable" id="cardConducao">
-              <h3>Fatores de condução</h3>
-              <canvas id="chartConducao"></canvas>
-              <div id="detailConducao" class="small hidden" style="margin-top:10px;"></div>
+            <div class="col-6 chart-card">
+              <div class="card">
+                <h3>Motivação prévia</h3>
+                <div class="chart-wrap"><canvas id="chartMotivacao"></canvas></div>
+              </div>
             </div>
 
-            <div class="col-4 card clickable" id="cardPedagogico">
-              <h3>Fatores pedagógicos</h3>
-              <canvas id="chartPedagogico"></canvas>
-              <div id="detailPedagogico" class="small hidden" style="margin-top:10px;"></div>
+            <div class="col-6 chart-card">
+              <div class="card">
+                <h3>Satisfação final</h3>
+                <div class="chart-wrap"><canvas id="chartSatisfacao"></canvas></div>
+              </div>
             </div>
 
-            <div class="col-4 card clickable" id="cardSocio">
-              <h3>Fatores socioemocionais</h3>
-              <canvas id="chartSocio"></canvas>
-              <div id="detailSocio" class="small hidden" style="margin-top:10px;"></div>
+            <div class="col-6 chart-card">
+              <div class="card">
+                <h3>Estado físico</h3>
+                <div class="chart-wrap"><canvas id="chartFisico"></canvas></div>
+              </div>
+            </div>
+
+            <div class="col-6 chart-card">
+              <div class="card">
+                <h3>Estado Emocional/Mental</h3>
+                <div class="chart-wrap"><canvas id="chartMental"></canvas></div>
+              </div>
+            </div>
+
+            <div class="col-12 chart-card">
+              <div class="card">
+                <h3>Infraestrutura funcionando</h3>
+                <div class="chart-wrap"><canvas id="chartInfraestrutura"></canvas></div>
+              </div>
             </div>
           </div>
 
@@ -1209,6 +1143,113 @@
     `;
   }
 
+  function drawBarLineChart(canvasId, values) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(400, Math.floor(rect.width * 2));
+    canvas.height = 320;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const marginLeft = 50;
+    const marginRight = 20;
+    const marginTop = 20;
+    const marginBottom = 35;
+    const chartW = w - marginLeft - marginRight;
+    const chartH = h - marginTop - marginBottom;
+
+    ctx.strokeStyle = "#d7dfeb";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, h - marginBottom);
+    ctx.lineTo(w - marginRight, h - marginBottom);
+    ctx.stroke();
+
+    for (let i = 1; i <= 10; i++) {
+      const y = marginTop + chartH - ((i - 1) / 9) * chartH;
+      ctx.strokeStyle = "rgba(148,163,184,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(w - marginRight, y);
+      ctx.stroke();
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "14px Arial";
+      ctx.fillText(String(i), 18, y + 5);
+    }
+
+    if (!values.length) {
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "18px Arial";
+      ctx.fillText("Sem dados suficientes para gráfico.", 70, h / 2);
+      return;
+    }
+
+    const slotW = chartW / values.length;
+    const barW = Math.max(12, slotW * 0.5);
+
+    const progressive = [];
+    let sum = 0;
+    values.forEach((v, i) => {
+      sum += v;
+      progressive.push(sum / (i + 1));
+    });
+
+    values.forEach((v, i) => {
+      const x = marginLeft + i * slotW + (slotW - barW) / 2;
+      const barH = (v / 10) * chartH;
+      const y = marginTop + chartH - barH;
+
+      ctx.fillStyle = "#93c5fd";
+      ctx.fillRect(x, y, barW, barH);
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "12px Arial";
+      ctx.fillText(String(i + 1), x + barW / 2 - 4, h - 10);
+    });
+
+    ctx.strokeStyle = "#dc2626";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    progressive.forEach((v, i) => {
+      const x = marginLeft + i * slotW + slotW / 2;
+      const y = marginTop + chartH - (v / 10) * chartH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = "#dc2626";
+    progressive.forEach((v, i) => {
+      const x = marginLeft + i * slotW + slotW / 2;
+      const y = marginTop + chartH - (v / 10) * chartH;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function filteredHistory(filters) {
+    const history = getHistory().filter(x => x.analysisStatus === "analyzed");
+    return history.filter((item) => {
+      const cfg = item.config || {};
+      if (filters.localInstitution && cfg.localInstitution !== filters.localInstitution) return false;
+      if (filters.yearLevel && cfg.yearLevel !== filters.yearLevel) return false;
+      if (filters.courseId && cfg.courseId !== filters.courseId) return false;
+      if (filters.classId && cfg.classId !== filters.classId) return false;
+      if (filters.subject && cfg.subject !== filters.subject) return false;
+      if (filters.topicObjective && cfg.topicObjective !== filters.topicObjective) return false;
+      if (filters.specificStudents && cfg.specificStudents !== filters.specificStudents) return false;
+      return true;
+    });
+  }
+
   function wireHistory() {
     const update = () => {
       const filters = {
@@ -1223,26 +1264,11 @@
 
       const items = filteredHistory(filters);
 
-      const conducao = items.map(x => computeConductionScore(x.gagne || []));
-      const pedagogico = items.map(x => scoreGagne(x.gagne || []));
-      const socio = items.map(x => avg([
-        x.socio?.motivacao || 0,
-        x.socio?.satisfacao || 0,
-        x.socio?.fisico || 0,
-        x.socio?.mental || 0,
-        x.socio?.infraestrutura || 0
-      ]));
-
-      drawLineChart("chartConducao", conducao, 0, 100);
-      drawLineChart("chartPedagogico", pedagogico, 0, 100);
-      drawLineChart("chartSocio", socio, 1, 10);
-
-      document.getElementById("detailConducao").textContent =
-        items.length ? `Média de condução: ${avg(conducao)}.` : "Sem dados para o filtro aplicado.";
-      document.getElementById("detailPedagogico").textContent =
-        items.length ? `Média pedagógica: ${avg(pedagogico)}.` : "Sem dados para o filtro aplicado.";
-      document.getElementById("detailSocio").textContent =
-        items.length ? `Média socioemocional: ${avg(socio)}.` : "Sem dados para o filtro aplicado.";
+      drawBarLineChart("chartMotivacao", items.map(x => Number(x.socio?.motivacao || 0)));
+      drawBarLineChart("chartSatisfacao", items.map(x => Number(x.socio?.satisfacao || 0)));
+      drawBarLineChart("chartFisico", items.map(x => Number(x.socio?.fisico || 0)));
+      drawBarLineChart("chartMental", items.map(x => Number(x.socio?.mental || 0)));
+      drawBarLineChart("chartInfraestrutura", items.map(x => Number(x.socio?.infraestrutura || 0)));
 
       const list = document.getElementById("historyLessons");
       list.innerHTML = items.length
@@ -1257,7 +1283,7 @@
             if (item.config?.specificStudents) details.push(item.config.specificStudents);
 
             return `
-              <div class="item clickable" data-open-record="${item.id}">
+              <div class="item" data-open-record="${item.id}" style="cursor:pointer;">
                 <div class="history-title"><strong>${new Date(item.createdAt).toLocaleString("pt-BR")}</strong></div>
                 <div class="small">${details.length ? escapeHtml(details.join(" / ")) : "Detalhes não informados"}</div>
               </div>
@@ -1276,12 +1302,6 @@
 
     ["fLocalInstitution","fYearLevel","fCourseId","fClassId","fSubject","fTopicObjective","fSpecificStudents"].forEach(id => {
       document.getElementById(id).onchange = update;
-    });
-
-    ["Conducao","Pedagogico","Socio"].forEach(name => {
-      document.getElementById("card" + name).onclick = () => {
-        document.getElementById("detail" + name).classList.toggle("hidden");
-      };
     });
 
     update();
@@ -1334,6 +1354,250 @@
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  async function deleteRecordingForRecord(recordId) {
+    const history = getHistory();
+    const idx = history.findIndex(x => x.id === recordId);
+    if (idx < 0) return;
+
+    const item = history[idx];
+    if (!item.recorded) return;
+
+    await deleteAudioBlob(recordId);
+    history[idx].recorded = false;
+    history[idx].audioSizeBytes = 0;
+    saveHistory(history);
+
+    renderRecent(history[idx]);
+    renderHistory();
+    alert("Gravação apagada.");
+  }
+
+  function generatePdf(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const baseName = buildBaseName(record);
+    const fileName = `${baseName}__analise.pdf`;
+
+    let y = 20;
+    const lineHeight = 7;
+    const pageWidth = 180;
+
+    function addWrapped(text, bold = false) {
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      const lines = doc.splitTextToSize(text, pageWidth);
+      doc.text(lines, 15, y);
+      y += lines.length * lineHeight + 2;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+
+    doc.setFontSize(16);
+    addWrapped("Relatório de análise da aula", true);
+    doc.setFontSize(11);
+
+    addWrapped(`Data do sistema: ${new Date(record.createdAt).toLocaleString("pt-BR")}`);
+    addWrapped(`Local/Instituição: ${record.config.localInstitution || "Não informado"}`);
+    addWrapped(`Ano/Semestre Letivo; Ciclo; Módulo: ${record.config.yearLevel || "Não informado"}`);
+    addWrapped(`Identificação do Curso: ${record.config.courseId || "Não informado"}`);
+    addWrapped(`Identificação da Turma: ${record.config.classId || "Não informado"}`);
+    addWrapped(`Disciplina: ${record.config.subject || "Não informado"}`);
+    addWrapped(`Tema/Objetivo do Encontro: ${record.config.topicObjective || "Não informado"}`);
+    addWrapped(`Aluno(s) Específico(s): ${record.config.specificStudents || "Não informado"}`);
+    addWrapped(`Duração prevista do encontro: ${record.config.durationMinutes || "Não informado"}`);
+    addWrapped(`Resumo rápido: ${record.tldr || "Sem resumo."}`);
+
+    addWrapped("Feedback — Padrão Robert Gagné", true);
+
+    (record.gagne || []).forEach((row, i) => {
+      addWrapped(`${i + 1}. ${row.etapa}`, true);
+      addWrapped(`Evidência: ${row.evidencia || "—"}`);
+      addWrapped(`Avaliação: ${row.avaliacao || "—"}`);
+      addWrapped(`Observações: ${row.observacao || "—"}`);
+    });
+
+    addWrapped("Sua auto-avaliação", true);
+    addWrapped(`Motivação prévia: ${record.socio?.motivacao ?? "-"}`);
+    addWrapped(`Satisfação final: ${record.socio?.satisfacao ?? "-"}`);
+    addWrapped(`Estado físico: ${record.socio?.fisico ?? "-"}`);
+    addWrapped(`Estado Emocional/Mental: ${record.socio?.mental ?? "-"}`);
+    addWrapped(`Infraestrutura funcionando: ${record.socio?.infraestrutura ?? "-"}`);
+
+    doc.save(fileName);
+  }
+
+  function renderRecent(record) {
+    resultBlock.classList.remove("hidden");
+    const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação salva";
+
+    resultBlock.innerHTML = `
+      <div class="card">
+        <h2>Análise da aula</h2>
+        <div class="small">${new Date(record.createdAt).toLocaleString("pt-BR")}</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Resumo rápido da aula</div>
+        <div class="item">${escapeHtml(record.tldr || "Sem resumo.")}</div>
+      </div>
+
+      <div class="card">
+        <h3>Feedback — Padrão Robert Gagné</h3>
+        ${renderGagneBlocks(record.gagne || [])}
+      </div>
+
+      <div class="card">
+        <div class="top-line">
+          <strong>Refinar dados da aula (opcional)</strong>
+          <button id="toggleRefineBtn" class="ghost">Mostrar / ocultar</button>
+        </div>
+
+        <div id="refineBlock" class="hidden">
+          <div class="small" style="margin-top:12px;">Digite ou grave os detalhes da aula. Informações opcionais.</div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label>Local/Instituição</label>
+              <div class="input-row">
+                <input id="postLocalInstitution" placeholder="Ex.: Colégio Super" value="${escapeHtml(record.config.localInstitution || "")}" />
+                <button class="ghost mic-btn" data-voice="postLocalInstitution">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Ano/Semestre Letivo; Ciclo; Módulo</label>
+              <div class="input-row">
+                <input id="postYearLevel" placeholder="Ex.: 9º Ano Fund1 / 3º Ano Graduação / Infantil 3" value="${escapeHtml(record.config.yearLevel || "")}" />
+                <button class="ghost mic-btn" data-voice="postYearLevel">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Identificação do Curso</label>
+              <div class="input-row">
+                <input id="postCourseId" placeholder="Ex.: Ensino Médio / Graduação em Administração" value="${escapeHtml(record.config.courseId || "")}" />
+                <button class="ghost mic-btn" data-voice="postCourseId">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Identificação da Turma</label>
+              <div class="input-row">
+                <input id="postClassId" placeholder="Ex.: 3B" value="${escapeHtml(record.config.classId || "")}" />
+                <button class="ghost mic-btn" data-voice="postClassId">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Disciplina</label>
+              <div class="input-row">
+                <input id="postSubject" placeholder="Ex.: Matemática" value="${escapeHtml(record.config.subject || "")}" />
+                <button class="ghost mic-btn" data-voice="postSubject">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Tema/Objetivo do Encontro</label>
+              <div class="input-row">
+                <input id="postTopicObjective" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" value="${escapeHtml(record.config.topicObjective || "")}" />
+                <button class="ghost mic-btn" data-voice="postTopicObjective">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Aluno(s) Específico(s)</label>
+              <div class="input-row">
+                <input id="postSpecificStudents" placeholder="Ex.: João Pedro e Maria Izadora" value="${escapeHtml(record.config.specificStudents || "")}" />
+                <button class="ghost mic-btn" data-voice="postSpecificStudents">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Duração do encontro (minutos)</label>
+              <div class="input-row">
+                <input id="postDurationMinutes" placeholder="Ex.: 45 minutos" value="${escapeHtml(record.config.durationMinutes || "")}" />
+                <button class="ghost mic-btn" data-voice="postDurationMinutes">🎤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Sua auto-avaliação</h3>
+        ${renderSlider("Motivação prévia", "motivacao", record.socio.motivacao)}
+        ${renderSlider("Satisfação final", "satisfacao", record.socio.satisfacao)}
+        ${renderSlider("Estado físico", "fisico", record.socio.fisico)}
+        ${renderSlider("Estado Emocional/Mental", "mental", record.socio.mental)}
+        ${renderSlider("Infraestrutura funcionando", "infraestrutura", record.socio.infraestrutura)}
+      </div>
+
+      <div class="card">
+        <div class="top-line">
+          <strong>Arquivos e ações</strong>
+        </div>
+        <div class="small" style="margin:10px 0 14px;">Arquivo de gravação: ${audioSizeLabel}</div>
+        <div class="controls">
+          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>▶ Ouvir gravação</button>
+          <button class="ghost" id="savePdfBtn">Salvar PDF da análise</button>
+          <button class="ghost" id="deleteAudioBtn" ${record.recorded ? "" : "disabled"}>Apagar gravação (${audioSizeLabel})</button>
+          <button class="ghost" id="saveAfterBtn">Salvar ajustes</button>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      ["motivacao","satisfacao","fisico","mental","infraestrutura"].forEach(id => {
+        const el = document.getElementById("sl-" + id);
+        if (el) applyRangeColor(el);
+      });
+    }, 0);
+
+    document.getElementById("toggleRefineBtn").onclick = () => {
+      document.getElementById("refineBlock").classList.toggle("hidden");
+    };
+
+    document.querySelectorAll('[data-voice]').forEach(btn => {
+      btn.onclick = () => openVoiceForInput(btn.getAttribute("data-voice"));
+    });
+
+    document.getElementById("playCurrentAudioBtn").onclick = () => playAudio(record.id);
+    document.getElementById("savePdfBtn").onclick = () => generatePdf(record);
+    document.getElementById("deleteAudioBtn").onclick = () => deleteRecordingForRecord(record.id);
+
+    document.getElementById("saveAfterBtn").onclick = () => {
+      const history = getHistory();
+      const idx = history.findIndex(x => x.id === record.id);
+      if (idx < 0) return;
+
+      history[idx].config = {
+        localInstitution: document.getElementById("postLocalInstitution").value.trim(),
+        yearLevel: document.getElementById("postYearLevel").value.trim(),
+        courseId: document.getElementById("postCourseId").value.trim(),
+        classId: document.getElementById("postClassId").value.trim(),
+        subject: document.getElementById("postSubject").value.trim(),
+        topicObjective: document.getElementById("postTopicObjective").value.trim(),
+        specificStudents: document.getElementById("postSpecificStudents").value.trim(),
+        durationMinutes: document.getElementById("postDurationMinutes").value.trim()
+      };
+
+      history[idx].socio = {
+        motivacao: Number(document.getElementById("sl-motivacao").value),
+        satisfacao: Number(document.getElementById("sl-satisfacao").value),
+        fisico: Number(document.getElementById("sl-fisico").value),
+        mental: Number(document.getElementById("sl-mental").value),
+        infraestrutura: Number(document.getElementById("sl-infraestrutura").value),
+      };
+
+      saveHistory(history);
+      saveConfig(history[idx].config);
+      renderSavedConfigPreview();
+      renderHistory();
+      alert("Dados da aula salvos.");
+    };
+  }
+
   async function startRecording() {
     sessionActionBlock.classList.add("hidden");
     resultBlock.classList.add("hidden");
@@ -1376,7 +1640,6 @@
 
     recorder.onstop = async () => {
       clearInterval(timerInterval);
-
       stream.getTracks().forEach((t) => t.stop());
 
       const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
