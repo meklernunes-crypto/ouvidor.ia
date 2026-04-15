@@ -303,6 +303,42 @@
       gap:12px;
       flex-wrap:wrap;
     }
+
+    .history-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .history-item{
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      border-radius:14px;
+      padding:14px;
+      cursor:pointer;
+    }
+
+    .history-item:hover{
+      border-color:#bfd4e3;
+    }
+
+    .history-title{
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .pill{
+      display:inline-block;
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#eef6fa;
+      color:var(--blue);
+      margin-right:6px;
+      margin-bottom:6px;
+    }
   </style>
 </head>
 <body>
@@ -334,6 +370,7 @@
 
   <div id="postRecordBlock" class="hidden"></div>
   <div id="analysisBlock" class="hidden"></div>
+  <div id="historyBlock"></div>
   <div id="audioModalRoot"></div>
 </div>
 
@@ -360,12 +397,21 @@
   const instructionsCard = document.getElementById("instructionsCard");
   const postRecordBlock = document.getElementById("postRecordBlock");
   const analysisBlock = document.getElementById("analysisBlock");
+  const historyBlock = document.getElementById("historyBlock");
   const audioModalRoot = document.getElementById("audioModalRoot");
 
   function pad(n){ return String(n).padStart(2,"0"); }
   function fmtDuration(seconds){ const m=Math.floor(seconds/60), s=seconds%60; return `${pad(m)}:${pad(s)}`; }
   function escapeHtml(str=""){ return str.replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
   function bytesToMB(bytes = 0) { return (bytes / (1024 * 1024)).toFixed(2); }
+
+  function formatDateTime(isoString) {
+    try {
+      return new Date(isoString).toLocaleString("pt-BR");
+    } catch {
+      return isoString || "";
+    }
+  }
 
   function renderConnectionStatus() {
     connectionInline.textContent = navigator.onLine
@@ -415,6 +461,20 @@
       const tx = db.transaction(RECORDS_STORE, "readonly");
       const req = tx.objectStore(RECORDS_STORE).get(id);
       req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function getAllRecords() {
+    const db = await openAppDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(RECORDS_STORE, "readonly");
+      const req = tx.objectStore(RECORDS_STORE).getAll();
+      req.onsuccess = () => {
+        const items = req.result || [];
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        resolve(items);
+      };
       req.onerror = () => reject(req.error);
     });
   }
@@ -586,11 +646,23 @@
   async function deleteRecording(recordId) {
     const ok = confirm("Deseja realmente deletar esta gravação?");
     if (!ok) return;
+
     await deleteAudioBlob(recordId);
+
+    const record = await getRecord(recordId);
+    if (record) {
+      record.recorded = false;
+      record.audioSizeBytes = 0;
+      await putRecord(record);
+    }
+
     postRecordBlock.innerHTML = "";
     postRecordBlock.classList.add("hidden");
     analysisBlock.innerHTML = "";
     analysisBlock.classList.add("hidden");
+
+    await renderHistory();
+
     alert("Gravação deletada.");
   }
 
@@ -644,13 +716,41 @@
     `;
   }
 
-  function applyRangeColors() {
+  function applyRangeColors(prefix = "sl-") {
     ["preparacao","motivacao","fisico","mental","infraestrutura","satisfacao"].forEach((id) => {
-      const el = document.getElementById("sl-" + id);
+      const el = document.getElementById(prefix + id);
       if (!el) return;
       const v = Number(el.value || 5);
       el.style.background = v <= 3 ? "#ef4444" : (v <= 7 ? "#eab308" : "#22c55e");
     });
+  }
+
+  function buildTagsFromConfig(config = {}) {
+    const tags = [];
+    if (config.localInstitution) tags.push(config.localInstitution);
+    if (config.courseId) tags.push(config.courseId);
+    if (config.classId) tags.push(config.classId);
+    if (config.subject) tags.push(config.subject);
+    return tags;
+  }
+
+  async function saveSelfEvaluation(recordId, prefix = "sl-") {
+    const current = await getRecord(recordId);
+    if (!current) return;
+
+    current.socio = {
+      preparacao: Number(document.getElementById(prefix + "preparacao").value),
+      motivacao: Number(document.getElementById(prefix + "motivacao").value),
+      fisico: Number(document.getElementById(prefix + "fisico").value),
+      mental: Number(document.getElementById(prefix + "mental").value),
+      infraestrutura: Number(document.getElementById(prefix + "infraestrutura").value),
+      satisfacao: Number(document.getElementById(prefix + "satisfacao").value),
+    };
+    current.socioSaved = true;
+
+    await putRecord(current);
+    await renderHistory();
+    alert("Autoavaliação salva.");
   }
 
   function renderAnalysis(record) {
@@ -706,28 +806,100 @@
 
     applyRangeColors();
 
-    document.getElementById("saveEvalBtn").onclick = async () => {
-      const current = await getRecord(record.id);
-      if (!current) return;
-
-      current.socio = {
-        preparacao: Number(document.getElementById("sl-preparacao").value),
-        motivacao: Number(document.getElementById("sl-motivacao").value),
-        fisico: Number(document.getElementById("sl-fisico").value),
-        mental: Number(document.getElementById("sl-mental").value),
-        infraestrutura: Number(document.getElementById("sl-infraestrutura").value),
-        satisfacao: Number(document.getElementById("sl-satisfacao").value),
-      };
-
-      current.socioSaved = true;
-      await putRecord(current);
-      alert("Autoavaliação salva.");
-    };
-
+    document.getElementById("saveEvalBtn").onclick = () => saveSelfEvaluation(record.id, "sl-");
     document.getElementById("savePdfBtn").onclick = () => generatePdf(record);
     document.getElementById("playCurrentAudioBtn").onclick = () => openAudioPlayer(record.id);
     document.getElementById("deleteAudioBtn").onclick = () => deleteRecording(record.id);
     document.getElementById("shareAudioBtn").onclick = () => shareRecording(record.id);
+  }
+
+  function renderHistoryDetails(record) {
+    return `
+      <div class="card">
+        <div class="top-line">
+          <strong>Registro do histórico</strong>
+          <span class="small">${formatDateTime(record.createdAt)}</span>
+        </div>
+
+        <div style="margin-top:10px;">
+          ${buildTagsFromConfig(record.config).map(tag => `<span class="pill">${escapeHtml(tag)}</span>`).join("")}
+        </div>
+
+        <div class="section-title" style="margin-top:14px;">Resumo rápido</div>
+        <div class="gagne-block">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
+
+        <strong>Feedback Robert Gagné</strong>
+        <div style="margin-top:12px;">
+          ${(record.gagne || []).map((row, i) => `
+            <div class="gagne-block">
+              <strong>${i + 1}. ${escapeHtml(row.etapa || "")}</strong>
+              <div class="gagne-line"><strong>Evidência:</strong> ${escapeHtml(row.evidencia || "—")}</div>
+              <div class="gagne-line"><strong>Avaliação:</strong> ${escapeHtml(row.avaliacao || "—")}</div>
+              <div class="gagne-line"><strong>Observações:</strong> ${escapeHtml(row.observacao || "—")}</div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <strong>Sua autoavaliação</strong>
+          <div style="margin-top:12px;">
+            ${renderSlider("Minha preparação prévia", "hist-preparacao", record.socio?.preparacao ?? 5)}
+            ${renderSlider("Minha motivação prévia", "hist-motivacao", record.socio?.motivacao ?? 5)}
+            ${renderSlider("Meu estado físico na gravação", "hist-fisico", record.socio?.fisico ?? 5)}
+            ${renderSlider("Meu estado mental/emocional na gravação", "hist-mental", record.socio?.mental ?? 5)}
+            ${renderSlider("Infraestrutura funcionando na gravação", "hist-infraestrutura", record.socio?.infraestrutura ?? 5)}
+            ${renderSlider("Minha satisfação final", "hist-satisfacao", record.socio?.satisfacao ?? 5)}
+          </div>
+          <div class="controls">
+            <button class="primary" id="saveHistEvalBtn">Salvar autoavaliação</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="ghost" id="histSavePdfBtn">Salvar PDF</button>
+          <button class="ghost" id="histPlayAudioBtn" ${record.recorded ? "" : "disabled"}>Ouvir gravação</button>
+          <button class="ghost" id="histDeleteAudioBtn" ${record.recorded ? "" : "disabled"}>Deletar gravação</button>
+          <button class="ghost" id="histShareAudioBtn" ${record.recorded ? "" : "disabled"}>Compartilhar gravação</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function openHistoryRecord(recordId) {
+    const record = await getRecord(recordId);
+    if (!record) return;
+
+    renderAnalysis(record);
+    analysisBlock.innerHTML += renderHistoryDetails(record);
+
+    applyRangeColors("sl-");
+    applyRangeColors("hist-");
+
+    document.getElementById("saveHistEvalBtn").onclick = async () => {
+      const current = await getRecord(record.id);
+      if (!current) return;
+
+      current.socio = {
+        preparacao: Number(document.getElementById("hist-preparacao").value),
+        motivacao: Number(document.getElementById("hist-motivacao").value),
+        fisico: Number(document.getElementById("hist-fisico").value),
+        mental: Number(document.getElementById("hist-mental").value),
+        infraestrutura: Number(document.getElementById("hist-infraestrutura").value),
+        satisfacao: Number(document.getElementById("hist-satisfacao").value),
+      };
+      current.socioSaved = true;
+
+      await putRecord(current);
+      await renderHistory();
+      alert("Autoavaliação atualizada.");
+    };
+
+    document.getElementById("histSavePdfBtn").onclick = () => generatePdf(record);
+    document.getElementById("histPlayAudioBtn").onclick = () => openAudioPlayer(record.id);
+    document.getElementById("histDeleteAudioBtn").onclick = () => deleteRecording(record.id);
+    document.getElementById("histShareAudioBtn").onclick = () => shareRecording(record.id);
+
+    analysisBlock.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function generatePdf(record) {
@@ -783,6 +955,42 @@
     addWrapped(`Minha satisfação final: ${record.socio?.satisfacao ?? "-"}`);
 
     doc.save(`orelho-analise-${Date.now()}.pdf`);
+  }
+
+  async function renderHistory() {
+    const records = await getAllRecords();
+    const analyzed = records.filter(r => r.analysisStatus === "analyzed");
+
+    if (!analyzed.length) {
+      historyBlock.innerHTML = "";
+      return;
+    }
+
+    historyBlock.innerHTML = `
+      <div class="card">
+        <div class="top-line">
+          <strong>Seu Histórico</strong>
+          <span class="small">${analyzed.length} registro(s)</span>
+        </div>
+
+        <div class="history-list">
+          ${analyzed.map((record) => `
+            <div class="history-item" data-history-id="${record.id}">
+              <div class="history-title">${formatDateTime(record.createdAt)}</div>
+              <div class="small" style="margin-bottom:6px;">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
+              <div>
+                ${buildTagsFromConfig(record.config).map(tag => `<span class="pill">${escapeHtml(tag)}</span>`).join("")}
+                ${record.socioSaved ? `<span class="pill">autoavaliação salva</span>` : `<span class="pill">autoavaliação pendente</span>`}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    document.querySelectorAll("[data-history-id]").forEach((el) => {
+      el.onclick = () => openHistoryRecord(el.getAttribute("data-history-id"));
+    });
   }
 
   function renderPostRecord(record) {
@@ -964,6 +1172,7 @@
 
       note.textContent = "Análise concluída.";
       renderAnalysis(current);
+      await renderHistory();
     };
 
     document.getElementById("listenBtn").onclick = () => openAudioPlayer(record.id);
@@ -1055,6 +1264,7 @@
       recorder = null;
 
       renderPostRecord(record);
+      await renderHistory();
     };
   }
 
@@ -1064,7 +1274,12 @@
   window.addEventListener("online", renderConnectionStatus);
   window.addEventListener("offline", renderConnectionStatus);
 
-  renderConnectionStatus();
+  async function init() {
+    renderConnectionStatus();
+    await renderHistory();
+  }
+
+  init();
 </script>
 </body>
 </html>
