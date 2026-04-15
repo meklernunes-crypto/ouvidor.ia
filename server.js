@@ -57,7 +57,7 @@ function convertToWav(inputPath, outputPath) {
 }
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true, app: "Ouvidor.IA Premium V2.1" });
+  res.json({ ok: true, app: "Ouvidor.IA Premium V3" });
 });
 
 app.post("/analyze", upload.single("audio"), async (req, res) => {
@@ -227,5 +227,5 @@ ${transcript}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Ouvidor.IA Premium V2.1 on port ${port}`);
+  console.log(`Ouvidor.IA Premium V3 on port ${port}`);
 });
