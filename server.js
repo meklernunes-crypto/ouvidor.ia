@@ -57,7 +57,7 @@ function convertToWav(inputPath, outputPath) {
 }
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true, app: "Ouvidor.IA Premium V3" });
+  res.json({ ok: true, app: "Orelho V3" });
 });
 
 app.post("/analyze", upload.single("audio"), async (req, res) => {
@@ -90,7 +90,7 @@ app.post("/analyze", upload.single("audio"), async (req, res) => {
     if (!transcript) {
       return res.json({
         transcript: "",
-        tldr: "Nenhum conteúdo textual foi captado na aula.",
+        tldr: "Nenhum conteúdo textual foi captado na gravação.",
         gagne: buildFallbackGagne(),
         debug: "Transcrição vazia.",
       });
@@ -104,7 +104,7 @@ Não seja punitivo nem excessivamente positivo.
 Use somente evidências reais da transcrição.
 Se houver pouca evidência, marque como "Parcial" ou "Ausente", sem inventar.
 
-Considere, quando existirem, os metadados fornecidos pelo professor:
+Considere, quando existirem, os metadados fornecidos:
 - Local/Instituição: ${req.body.localInstitution || ""}
 - Ano/Semestre Letivo; Ciclo; Módulo: ${req.body.yearLevel || ""}
 - Identificação do Curso: ${req.body.courseId || ""}
@@ -225,7 +225,74 @@ ${transcript}
   }
 });
 
+app.post("/analyze-special", async (req, res) => {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "OPENAI_API_KEY não configurada." });
+  }
+
+  try {
+    const transcript = String(req.body.transcript || "").trim();
+    const specialPrompt = String(req.body.specialPrompt || "").trim();
+
+    if (!transcript) {
+      return res.status(400).json({ error: "Transcrição não recebida." });
+    }
+
+    if (!specialPrompt) {
+      return res.status(400).json({ error: "Solicitação especial não recebida." });
+    }
+
+    const prompt = `
+Você recebeu a transcrição de uma gravação e um pedido especial do usuário.
+
+Regras:
+- Responda em português do Brasil.
+- Seja direto, claro e útil.
+- Não invente informação que não esteja na transcrição.
+- Se o pedido envolver contagem, conte com o máximo de precisão possível com base no texto transcrito.
+- Se houver limitação por causa da transcrição, explique de forma breve.
+- Responda somente em JSON válido.
+
+Formato obrigatório:
+{
+  "result": "resposta final em texto corrido"
+}
+
+Pedido especial:
+${specialPrompt}
+
+Transcrição:
+${transcript}
+`;
+
+    const resp = await client.responses.create({
+      model: "gpt-4.1-mini",
+      input: prompt,
+    });
+
+    const text = (resp.output_text || "").trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = {
+        result: text || "Não foi possível gerar a análise especial.",
+      };
+    }
+
+    res.json({
+      result: parsed.result || "Não foi possível gerar a análise especial.",
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "Falha ao gerar análise especial.",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Ouvidor.IA Premium V3 on port ${port}`);
+  console.log(`Orelho V3 on port ${port}`);
 });
