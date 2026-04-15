@@ -14,23 +14,29 @@
       --muted:#6b7280;
       --blue:#1f6a8a;
       --orange:#ef8b6c;
+      --red:#dc2626;
+      --green:#16a34a;
+      --yellow:#d97706;
       --border:#dbe3ef;
       --shadow:0 10px 26px rgba(15,23,42,.06);
       --radius:20px;
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,sans-serif;
       background:var(--bg);
       color:var(--text);
     }
+
     .wrap{
-      max-width:900px;
+      max-width:950px;
       margin:0 auto;
       padding:20px 16px 40px;
     }
+
     .card{
       background:var(--panel);
       border:1px solid var(--border);
@@ -39,22 +45,26 @@
       margin-bottom:16px;
       box-shadow:var(--shadow);
     }
+
     .hero{
       text-align:center;
       padding:26px 18px 20px;
     }
+
     .brand-logo{
       width:220px;
       max-width:75%;
       display:block;
       margin:0 auto 10px;
     }
+
     .welcome{
       font-size:18px;
       font-weight:700;
       margin:12px 0 6px;
       color:var(--blue);
     }
+
     .controls{
       display:flex;
       gap:12px;
@@ -62,6 +72,7 @@
       flex-wrap:wrap;
       margin-top:18px;
     }
+
     button{
       border:none;
       border-radius:14px;
@@ -70,7 +81,9 @@
       font-weight:700;
       cursor:pointer;
     }
+
     button:disabled{opacity:.55;cursor:not-allowed}
+
     .primary{background:var(--blue);color:#fff}
     .danger{background:var(--orange);color:#fff}
     .ghost{
@@ -78,23 +91,28 @@
       color:var(--text);
       border:1px solid var(--border);
     }
+
     .metric{
       font-size:44px;
       font-weight:800;
       margin-top:14px;
       letter-spacing:-.02em;
     }
+
     .muted,.small{
       color:var(--muted);
       line-height:1.45;
     }
+
     .small{font-size:12px}
+
     .status-live{
       margin-top:8px;
       font-size:15px;
       font-weight:700;
       color:var(--blue);
     }
+
     .section-title{
       font-size:13px;
       font-weight:700;
@@ -103,46 +121,33 @@
       letter-spacing:.04em;
       margin-bottom:8px;
     }
+
     .hidden{display:none}
-    .action-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:12px;
-      margin-top:8px;
-    }
-    @media(max-width:700px){
-      .action-grid{grid-template-columns:1fr}
-    }
-    .action-card{
-      border:1px solid var(--border);
-      background:var(--panel-soft);
-      border-radius:16px;
-      padding:14px;
-    }
-    .action-card button{
-      width:100%;
-      margin-bottom:8px;
-    }
+
     .field-grid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
       gap:12px;
       margin-top:14px;
     }
+
     @media(max-width:850px){
       .field-grid{grid-template-columns:1fr}
     }
+
     .field label{
       display:block;
       margin-bottom:6px;
       font-weight:700;
       font-size:14px;
     }
+
     .input-row{
       display:flex;
       gap:8px;
       align-items:center;
     }
+
     input, textarea{
       width:100%;
       padding:12px 14px;
@@ -153,6 +158,16 @@
       outline:none;
       font-size:14px;
     }
+
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+
+    input::placeholder, textarea::placeholder{
+      color:#9aa5b5;
+    }
+
     .mic-btn{
       min-width:44px;
       width:44px;
@@ -166,16 +181,98 @@
       -webkit-user-select:none;
       touch-action:none;
     }
+
     .voice-help{
       margin-top:8px;
       font-size:12px;
       color:var(--muted);
     }
-    .history-title{
-      font-size:15px;
-      font-weight:800;
-      margin-bottom:6px;
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:8px;
     }
+
+    @media(max-width:700px){
+      .action-grid{grid-template-columns:1fr}
+    }
+
+    .action-card{
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .action-card button{
+      width:100%;
+      margin-bottom:8px;
+    }
+
+    .gagne-block{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-soft);
+      padding:14px;
+      margin-bottom:10px;
+    }
+
+    .gagne-block strong{
+      display:block;
+      margin-bottom:8px;
+    }
+
+    .gagne-line{
+      margin-bottom:6px;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .range-wrap{
+      margin-bottom:16px;
+    }
+
+    .range-wrap label{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    input[type="range"]{
+      -webkit-appearance:none;
+      appearance:none;
+      height:10px;
+      padding:0;
+      border:none;
+      border-radius:999px;
+      background:#d1d5db;
+    }
+
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#fff;
+      border:2px solid rgba(0,0,0,.18);
+      box-shadow:0 2px 6px rgba(0,0,0,.12);
+    }
+
+    input[type="range"]::-moz-range-thumb{
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#fff;
+      border:2px solid rgba(0,0,0,.18);
+      box-shadow:0 2px 6px rgba(0,0,0,.12);
+    }
+
     .audio-modal{
       position:fixed;
       inset:0;
@@ -186,6 +283,7 @@
       padding:20px;
       z-index:9999;
     }
+
     .audio-modal-card{
       background:#fff;
       border-radius:18px;
@@ -193,6 +291,14 @@
       max-width:500px;
       width:100%;
       box-shadow:0 18px 48px rgba(15,23,42,.18);
+    }
+
+    .top-line{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
     }
   </style>
 </head>
@@ -224,9 +330,11 @@
   </div>
 
   <div id="postRecordBlock" class="hidden"></div>
+  <div id="analysisBlock" class="hidden"></div>
   <div id="audioModalRoot"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   const CONFIG_KEY = "ouvidor_ia_premium_config_v6";
   const DB_NAME = "orelho_app_v3";
@@ -248,15 +356,13 @@
   const connectionInline = document.getElementById("connectionInline");
   const instructionsCard = document.getElementById("instructionsCard");
   const postRecordBlock = document.getElementById("postRecordBlock");
+  const analysisBlock = document.getElementById("analysisBlock");
   const audioModalRoot = document.getElementById("audioModalRoot");
 
   function pad(n){ return String(n).padStart(2,"0"); }
-  function fmtDuration(seconds){ const m=Math.floor(seconds/60), s=seconds%60; return `${pad(m)}:${pad(s)}`; }
-  function escapeHtml(str=""){ return str.replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
-
-  function bytesToMB(bytes = 0) {
-    return (bytes / (1024 * 1024)).toFixed(2);
-  }
+  function fmtDuration(seconds){ const m=Math.floor(seconds/60), s=seconds%60; return \`\${pad(m)}:\${pad(s)}\`; }
+  function escapeHtml(str=""){ return str.replace(/[&<>\"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
+  function bytesToMB(bytes = 0) { return (bytes / (1024 * 1024)).toFixed(2); }
 
   function renderConnectionStatus() {
     connectionInline.textContent = navigator.onLine
@@ -265,11 +371,8 @@
   }
 
   function getConfig() {
-    try {
-      return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}");
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}"); }
+    catch { return {}; }
   }
 
   function saveConfig(obj) {
@@ -303,6 +406,16 @@
     });
   }
 
+  async function getRecord(id) {
+    const db = await openAppDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(RECORDS_STORE, "readonly");
+      const req = tx.objectStore(RECORDS_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
   async function saveAudioBlob(id, blob) {
     const db = await openAppDB();
     return await new Promise((resolve, reject) => {
@@ -332,8 +445,7 @@
       tx.onerror = () => reject(tx.error);
     });
   }
-
-  function openVoiceForInput(targetId) {
+    function openVoiceForInput(targetId) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       alert("Seu navegador não oferece gravação por voz neste campo.");
@@ -396,7 +508,7 @@
       return;
     }
 
-    const file = new File([blob], `${recordId}.webm`, { type: blob.type || "audio/webm" });
+    const file = new File([blob], \`\${recordId}.webm\`, { type: blob.type || "audio/webm" });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
@@ -411,7 +523,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${recordId}.webm`;
+    a.download = \`\${recordId}.webm\`;
     a.click();
     URL.revokeObjectURL(url);
     alert("Arquivo baixado para compartilhamento manual.");
@@ -430,7 +542,7 @@
     audioModalRoot.innerHTML = `
       <div class="audio-modal" id="audioModal">
         <div class="audio-modal-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div class="top-line">
             <strong>Ouvir gravação</strong>
             <button class="ghost" id="closeAudioModalBtn">Fechar</button>
           </div>
@@ -476,16 +588,116 @@
     alert("Gravação deletada.");
   }
 
+  function fillConfigFields(cfg = {}) {
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val || "";
+    };
+    set("postLocalInstitution", cfg.localInstitution);
+    set("postYearLevel", cfg.yearLevel);
+    set("postCourseId", cfg.courseId);
+    set("postClassId", cfg.classId);
+    set("postSubject", cfg.subject);
+    set("postTopicObjective", cfg.topicObjective);
+    set("postSpecificStudents", cfg.specificStudents);
+    set("postDurationMinutes", cfg.durationMinutes);
+  }
+
+  function readPostConfig() {
+    return {
+      localInstitution: document.getElementById("postLocalInstitution")?.value.trim() || "",
+      yearLevel: document.getElementById("postYearLevel")?.value.trim() || "",
+      courseId: document.getElementById("postCourseId")?.value.trim() || "",
+      classId: document.getElementById("postClassId")?.value.trim() || "",
+      subject: document.getElementById("postSubject")?.value.trim() || "",
+      topicObjective: document.getElementById("postTopicObjective")?.value.trim() || "",
+      specificStudents: document.getElementById("postSpecificStudents")?.value.trim() || "",
+      durationMinutes: document.getElementById("postDurationMinutes")?.value.trim() || ""
+    };
+  }
+
   function renderPostRecord(record) {
     instructionsCard.classList.add("hidden");
     postRecordBlock.classList.remove("hidden");
 
-    const audioSizeLabel = `${bytesToMB(record.audioSizeBytes || 0)} MB`;
+    const audioSizeLabel = \`\${bytesToMB(record.audioSizeBytes || 0)} MB\`;
     const cfg = record.config || getConfig();
 
     postRecordBlock.innerHTML = `
       <div class="card">
         <div class="section-title">Gravação encerrada</div>
+
+        <div class="card" style="margin-bottom:14px;background:#fff;">
+          <strong>Detalhes da gravação (opcional)</strong>
+          <div class="small" style="margin-top:8px;">Digite ou grave os detalhes. Essas informações serão usadas antes da análise.</div>
+          <div class="voice-help">🎤 Segure o botão do microfone para falar.</div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label>Local/Instituição</label>
+              <div class="input-row">
+                <input id="postLocalInstitution" placeholder="Ex.: Colégio Super" />
+                <button class="ghost mic-btn mic-hold" data-target="postLocalInstitution">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Ano/Semestre Letivo; Ciclo; Módulo</label>
+              <div class="input-row">
+                <input id="postYearLevel" placeholder="Ex.: 9º Ano Fund1 / 3º Ano Graduação / Infantil 3" />
+                <button class="ghost mic-btn mic-hold" data-target="postYearLevel">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Identificação do Curso</label>
+              <div class="input-row">
+                <input id="postCourseId" placeholder="Ex.: Ensino Médio / Graduação em Administração" />
+                <button class="ghost mic-btn mic-hold" data-target="postCourseId">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Identificação da Turma</label>
+              <div class="input-row">
+                <input id="postClassId" placeholder="Ex.: 3B" />
+                <button class="ghost mic-btn mic-hold" data-target="postClassId">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Disciplina</label>
+              <div class="input-row">
+                <input id="postSubject" placeholder="Ex.: Matemática" />
+                <button class="ghost mic-btn mic-hold" data-target="postSubject">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Tema/Objetivo do Encontro</label>
+              <div class="input-row">
+                <input id="postTopicObjective" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" />
+                <button class="ghost mic-btn mic-hold" data-target="postTopicObjective">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Aluno(s) Específico(s)</label>
+              <div class="input-row">
+                <input id="postSpecificStudents" placeholder="Ex.: João Pedro e Maria Izadora" />
+                <button class="ghost mic-btn mic-hold" data-target="postSpecificStudents">🎤</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Duração do encontro (minutos)</label>
+              <div class="input-row">
+                <input id="postDurationMinutes" placeholder="Ex.: 45 minutos" />
+                <button class="ghost mic-btn mic-hold" data-target="postDurationMinutes">🎤</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="action-grid">
           <div class="action-card">
@@ -509,111 +721,33 @@
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <strong>Detalhes da gravação (opcional)</strong>
-        <div class="small" style="margin-top:8px;">Digite ou grave os detalhes. Essas informações serão usadas depois.</div>
-        <div class="voice-help">🎤 Segure o botão do microfone para falar.</div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label>Local/Instituição</label>
-            <div class="input-row">
-              <input id="postLocalInstitution" placeholder="Ex.: Colégio Super" />
-              <button class="ghost mic-btn mic-hold" data-target="postLocalInstitution">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Ano/Semestre Letivo; Ciclo; Módulo</label>
-            <div class="input-row">
-              <input id="postYearLevel" placeholder="Ex.: 9º Ano Fund1 / 3º Ano Graduação / Infantil 3" />
-              <button class="ghost mic-btn mic-hold" data-target="postYearLevel">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Identificação do Curso</label>
-            <div class="input-row">
-              <input id="postCourseId" placeholder="Ex.: Ensino Médio / Graduação em Administração" />
-              <button class="ghost mic-btn mic-hold" data-target="postCourseId">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Identificação da Turma</label>
-            <div class="input-row">
-              <input id="postClassId" placeholder="Ex.: 3B" />
-              <button class="ghost mic-btn mic-hold" data-target="postClassId">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Disciplina</label>
-            <div class="input-row">
-              <input id="postSubject" placeholder="Ex.: Matemática" />
-              <button class="ghost mic-btn mic-hold" data-target="postSubject">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Tema/Objetivo do Encontro</label>
-            <div class="input-row">
-              <input id="postTopicObjective" placeholder="Ex.: Aula Reforço Teorema de Pitágoras" />
-              <button class="ghost mic-btn mic-hold" data-target="postTopicObjective">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Aluno(s) Específico(s)</label>
-            <div class="input-row">
-              <input id="postSpecificStudents" placeholder="Ex.: João Pedro e Maria Izadora" />
-              <button class="ghost mic-btn mic-hold" data-target="postSpecificStudents">🎤</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Duração do encontro (minutos)</label>
-            <div class="input-row">
-              <input id="postDurationMinutes" placeholder="Ex.: 45 minutos" />
-              <button class="ghost mic-btn mic-hold" data-target="postDurationMinutes">🎤</button>
-            </div>
-          </div>
-        </div>
-      </div>
     `;
 
-    const set = (id, val) => {
-      const el = document.getElementById(id);
-      if (el) el.value = val || "";
-    };
-    set("postLocalInstitution", cfg.localInstitution);
-    set("postYearLevel", cfg.yearLevel);
-    set("postCourseId", cfg.courseId);
-    set("postClassId", cfg.classId);
-    set("postSubject", cfg.subject);
-    set("postTopicObjective", cfg.topicObjective);
-    set("postSpecificStudents", cfg.specificStudents);
-    set("postDurationMinutes", cfg.durationMinutes);
-
+    fillConfigFields(cfg);
     bindHoldToTalk(postRecordBlock);
 
     document.getElementById("analyzeBtn").onclick = async () => {
       const note = document.getElementById("analyzeConnectionNote");
+      const newCfg = readPostConfig();
+      saveConfig(newCfg);
+      const current = await getRecord(record.id);
+      current.config = newCfg;
+      await putRecord(current);
+
       if (!navigator.onLine) {
         note.textContent = "Sem conexão para analisar.";
         return;
       }
+
       note.textContent = "Orelho trabalhando pra você. Pode levar alguns minutos";
-      alert("Fluxo de análise ligado. Primeiro vamos garantir que a gravação funcione.");
+      alert("Na próxima etapa, vamos religar a análise real sem quebrar a gravação.");
     };
 
     document.getElementById("listenBtn").onclick = () => openAudioPlayer(record.id);
     document.getElementById("deleteBtn").onclick = () => deleteRecording(record.id);
     document.getElementById("shareBtn").onclick = () => shareRecording(record.id);
   }
-
-  async function startRecording() {
+    async function startRecording() {
     chunks = [];
 
     try {
