@@ -82,7 +82,10 @@
       cursor:pointer;
     }
 
-    button:disabled{opacity:.55;cursor:not-allowed}
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
 
     .primary{background:var(--blue);color:#fff}
     .danger{background:var(--orange);color:#fff}
@@ -288,7 +291,7 @@
       background:#fff;
       border-radius:18px;
       padding:18px;
-      max-width:500px;
+      max-width:560px;
       width:100%;
       box-shadow:0 18px 48px rgba(15,23,42,.18);
     }
@@ -586,6 +589,8 @@
     await deleteAudioBlob(recordId);
     postRecordBlock.innerHTML = "";
     postRecordBlock.classList.add("hidden");
+    analysisBlock.innerHTML = "";
+    analysisBlock.classList.add("hidden");
     alert("Gravação deletada.");
   }
 
@@ -617,9 +622,174 @@
     };
   }
 
+  function renderSlider(label, id, value) {
+    return `
+      <div class="range-wrap">
+        <label>
+          <span>${label}</span>
+          <strong id="lb-${id}">${value}</strong>
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value="${value}"
+          id="sl-${id}"
+          oninput="
+            document.getElementById('lb-${id}').innerText=this.value;
+            this.style.background=(this.value<=3?'#ef4444':(this.value<=7?'#eab308':'#22c55e'));
+          "
+        />
+      </div>
+    `;
+  }
+
+  function applyRangeColors() {
+    ["preparacao","motivacao","fisico","mental","infraestrutura","satisfacao"].forEach((id) => {
+      const el = document.getElementById("sl-" + id);
+      if (!el) return;
+      const v = Number(el.value || 5);
+      el.style.background = v <= 3 ? "#ef4444" : (v <= 7 ? "#eab308" : "#22c55e");
+    });
+  }
+
+  function renderAnalysis(record) {
+    analysisBlock.classList.remove("hidden");
+    const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação";
+
+    analysisBlock.innerHTML = `
+      <div class="card">
+        <div class="section-title">Resumo rápido</div>
+        <div class="gagne-block">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
+      </div>
+
+      <div class="card">
+        <strong>Feedback Robert Gagné</strong>
+        <div style="margin-top:12px;">
+          ${(record.gagne || []).map((row, i) => `
+            <div class="gagne-block">
+              <strong>${i + 1}. ${escapeHtml(row.etapa || "")}</strong>
+              <div class="gagne-line"><strong>Evidência:</strong> ${escapeHtml(row.evidencia || "—")}</div>
+              <div class="gagne-line"><strong>Avaliação:</strong> ${escapeHtml(row.avaliacao || "—")}</div>
+              <div class="gagne-line"><strong>Observações:</strong> ${escapeHtml(row.observacao || "—")}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Sua autoavaliação</strong>
+        <div style="margin-top:12px;">
+          ${renderSlider("Minha preparação prévia", "preparacao", record.socio?.preparacao ?? 5)}
+          ${renderSlider("Minha motivação prévia", "motivacao", record.socio?.motivacao ?? 5)}
+          ${renderSlider("Meu estado físico na gravação", "fisico", record.socio?.fisico ?? 5)}
+          ${renderSlider("Meu estado mental/emocional na gravação", "mental", record.socio?.mental ?? 5)}
+          ${renderSlider("Infraestrutura funcionando na gravação", "infraestrutura", record.socio?.infraestrutura ?? 5)}
+          ${renderSlider("Minha satisfação final", "satisfacao", record.socio?.satisfacao ?? 5)}
+        </div>
+        <div class="controls">
+          <button class="primary" id="saveEvalBtn">Salvar autoavaliação</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Ações</strong>
+        <div class="small" style="margin:10px 0 14px;">Arquivo de gravação: ${audioSizeLabel}</div>
+        <div class="controls">
+          <button class="ghost" id="savePdfBtn">Salvar PDF</button>
+          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>Ouvir gravação</button>
+          <button class="ghost" id="deleteAudioBtn" ${record.recorded ? "" : "disabled"}>Deletar gravação</button>
+          <button class="ghost" id="shareAudioBtn" ${record.recorded ? "" : "disabled"}>Compartilhar gravação</button>
+        </div>
+      </div>
+    `;
+
+    applyRangeColors();
+
+    document.getElementById("saveEvalBtn").onclick = async () => {
+      const current = await getRecord(record.id);
+      if (!current) return;
+
+      current.socio = {
+        preparacao: Number(document.getElementById("sl-preparacao").value),
+        motivacao: Number(document.getElementById("sl-motivacao").value),
+        fisico: Number(document.getElementById("sl-fisico").value),
+        mental: Number(document.getElementById("sl-mental").value),
+        infraestrutura: Number(document.getElementById("sl-infraestrutura").value),
+        satisfacao: Number(document.getElementById("sl-satisfacao").value),
+      };
+
+      current.socioSaved = true;
+      await putRecord(current);
+      alert("Autoavaliação salva.");
+    };
+
+    document.getElementById("savePdfBtn").onclick = () => generatePdf(record);
+    document.getElementById("playCurrentAudioBtn").onclick = () => openAudioPlayer(record.id);
+    document.getElementById("deleteAudioBtn").onclick = () => deleteRecording(record.id);
+    document.getElementById("shareAudioBtn").onclick = () => shareRecording(record.id);
+  }
+
+  function generatePdf(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let y = 20;
+    const lineHeight = 7;
+    const pageWidth = 180;
+
+    function addWrapped(text, bold = false) {
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      const lines = doc.splitTextToSize(text, pageWidth);
+      doc.text(lines, 15, y);
+      y += lines.length * lineHeight + 2;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+
+    doc.setFontSize(16);
+    addWrapped("Relatório de análise da gravação", true);
+    doc.setFontSize(11);
+
+    addWrapped(`Data do sistema: ${new Date(record.createdAt).toLocaleString("pt-BR")}`);
+    addWrapped(`Local/Instituição: ${record.config?.localInstitution || "Não informado"}`);
+    addWrapped(`Ano/Semestre Letivo; Ciclo; Módulo: ${record.config?.yearLevel || "Não informado"}`);
+    addWrapped(`Identificação do Curso: ${record.config?.courseId || "Não informado"}`);
+    addWrapped(`Identificação da Turma: ${record.config?.classId || "Não informado"}`);
+    addWrapped(`Disciplina: ${record.config?.subject || "Não informado"}`);
+    addWrapped(`Tema/Objetivo do Encontro: ${record.config?.topicObjective || "Não informado"}`);
+    addWrapped(`Aluno(s) Específico(s): ${record.config?.specificStudents || "Não informado"}`);
+    addWrapped(`Duração prevista do encontro: ${record.config?.durationMinutes || "Não informado"}`);
+
+    addWrapped("Resumo rápido", true);
+    addWrapped(record.tldr || "Sem resumo disponível.");
+
+    addWrapped("Feedback Robert Gagné", true);
+    (record.gagne || []).forEach((row, i) => {
+      addWrapped(`${i + 1}. ${row.etapa || ""}`, true);
+      addWrapped(`Evidência: ${row.evidencia || "—"}`);
+      addWrapped(`Avaliação: ${row.avaliacao || "—"}`);
+      addWrapped(`Observações: ${row.observacao || "—"}`);
+    });
+
+    addWrapped("Sua autoavaliação", true);
+    addWrapped(`Minha preparação prévia: ${record.socio?.preparacao ?? "-"}`);
+    addWrapped(`Minha motivação prévia: ${record.socio?.motivacao ?? "-"}`);
+    addWrapped(`Meu estado físico na gravação: ${record.socio?.fisico ?? "-"}`);
+    addWrapped(`Meu estado mental/emocional na gravação: ${record.socio?.mental ?? "-"}`);
+    addWrapped(`Infraestrutura funcionando na gravação: ${record.socio?.infraestrutura ?? "-"}`);
+    addWrapped(`Minha satisfação final: ${record.socio?.satisfacao ?? "-"}`);
+
+    doc.save(`orelho-analise-${Date.now()}.pdf`);
+  }
+
   function renderPostRecord(record) {
     instructionsCard.classList.add("hidden");
     postRecordBlock.classList.remove("hidden");
+    analysisBlock.classList.add("hidden");
+    analysisBlock.innerHTML = "";
 
     const audioSizeLabel = `${bytesToMB(record.audioSizeBytes || 0)} MB`;
     const cfg = record.config || getConfig();
@@ -741,7 +911,10 @@
       const note = document.getElementById("analyzeConnectionNote");
       const newCfg = readPostConfig();
       saveConfig(newCfg);
+
       const current = await getRecord(record.id);
+      if (!current) return;
+
       current.config = newCfg;
       await putRecord(current);
 
@@ -751,7 +924,46 @@
       }
 
       note.textContent = "Orelho trabalhando pra você. Pode levar alguns minutos";
-      alert("Na próxima etapa, vamos religar a análise real sem quebrar a gravação.");
+
+      const blob = await getAudioBlob(record.id);
+      if (!blob) {
+        note.textContent = "Gravação não encontrada.";
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("audio", blob, "gravacao.webm");
+      fd.append("localInstitution", current.config.localInstitution || "");
+      fd.append("yearLevel", current.config.yearLevel || "");
+      fd.append("courseId", current.config.courseId || "");
+      fd.append("classId", current.config.classId || "");
+      fd.append("subject", current.config.subject || "");
+      fd.append("topicObjective", current.config.topicObjective || "");
+      fd.append("specificStudents", current.config.specificStudents || "");
+      fd.append("durationMinutes", current.config.durationMinutes || "");
+      fd.append("systemDate", new Date(current.createdAt).toLocaleString("pt-BR"));
+
+      let data;
+      try {
+        const resp = await fetch("/analyze", { method: "POST", body: fd });
+        data = await resp.json();
+      } catch (e) {
+        data = { error: "Falha ao conectar com o servidor." };
+      }
+
+      if (data.error) {
+        note.textContent = data.error;
+        return;
+      }
+
+      current.transcript = data.transcript || "";
+      current.tldr = data.tldr || "";
+      current.gagne = Array.isArray(data.gagne) ? data.gagne : [];
+      current.analysisStatus = "analyzed";
+      await putRecord(current);
+
+      note.textContent = "Análise concluída.";
+      renderAnalysis(current);
     };
 
     document.getElementById("listenBtn").onclick = () => openAudioPlayer(record.id);
