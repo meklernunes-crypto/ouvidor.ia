@@ -401,22 +401,22 @@
       margin-top:4px;
     }
 
-    .summary-strip{
+    .details-summary{
       margin-top:8px;
       font-size:12px;
       color:var(--muted);
     }
 
-    .table-pdf{
-      border-collapse:collapse;
-      width:100%;
-      font-size:11px;
+    .analyzing{
+      animation:pulse 1.2s infinite;
+      color:var(--blue);
+      font-weight:700;
     }
 
-    .table-pdf td, .table-pdf th{
-      border:1px solid #cfd8e3;
-      padding:4px 6px;
-      vertical-align:top;
+    @keyframes pulse{
+      0%{opacity:0.3}
+      50%{opacity:1}
+      100%{opacity:0.3}
     }
   </style>
 </head>
@@ -463,40 +463,40 @@
 
   const MODEL_CATALOG = {
     gagne: {
-      label: "Robert Gagné",
-      description: "Estrutura e sequência lógica da instrução.",
+      label: "Gagné",
+      description: "Presencial / Síncrona • Todos os níveis • Conteúdos processuais, técnicos e passo a passo.",
     },
     bloom: {
-      label: "Taxonomia de Bloom",
-      description: "Profundidade cognitiva e complexidade do pensamento.",
+      label: "Bloom",
+      description: "Híbrida / EAD / Presencial • Fundamental 1 ao Superior • Complexidade e objetivos cognitivos.",
     },
     merrill: {
-      label: "Princípios de Merrill",
-      description: "Aprendizagem prática centrada em tarefa ou problema real.",
+      label: "Merrill",
+      description: "EAD / Híbrida • Superior e Corporativo • Problemas reais e estudos de caso.",
     },
     arcs: {
-      label: "ARCS de Keller",
-      description: "Motivação, atenção, relevância, confiança e satisfação.",
+      label: "ARCS",
+      description: "EAD (assíncrona) / Áudio • Médio ao Corporativo • Temas áridos onde o engajamento é o desafio.",
     },
     addie: {
       label: "ADDIE",
-      description: "Planejamento e coerência macro do design instrucional.",
+      description: "Gestão / Design Instrucional • Coordenação • Planejamento macro da estrutura do curso.",
     },
     assure: {
       label: "ASSURE",
-      description: "Planejamento com foco em mídia, tecnologia e participação.",
+      description: "Híbrida / Multimídia • Fundamental ao Médio • Uso de tecnologia em sala.",
     },
     tpack: {
       label: "TPACK",
-      description: "Integração entre conteúdo, pedagogia e tecnologia.",
+      description: "Híbrida / EAD • Todos os níveis • Domínio de tecnologia tanto quanto do tema.",
     },
     reggio: {
       label: "Reggio Emilia",
-      description: "Escuta, observação, documentação e autonomia criativa.",
+      description: "Presencial • Educação Infantil • Exploração sensorial e autonomia criativa.",
     },
     kirkpatrick: {
       label: "Kirkpatrick",
-      description: "Impacto da experiência: reação, aprendizagem, comportamento e resultado.",
+      description: "Avaliação de impacto • Corporativo • Resultado e aplicação prática.",
     },
   };
 
@@ -654,8 +654,7 @@
       tx.onerror = () => reject(tx.error);
     });
   }
-
-  function openVoiceForInput(targetId) {
+    function openVoiceForInput(targetId) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       alert("Seu navegador não oferece gravação por voz neste campo.");
@@ -722,190 +721,43 @@
       config.subject,
       config.topicObjective,
       config.specificStudents,
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
 
     const hasAny = (...terms) => terms.some((term) => haystack.includes(term));
 
-    if (
-      hasAny(
-        "infantil",
-        "educação infantil",
-        "educacao infantil",
-        "creche",
-        "pré-escola",
-        "pre-escola",
-        "recreação",
-        "recreacao",
-        "lúdico",
-        "ludico"
-      )
-    ) {
-      return {
-        model: "reggio",
-        reason: "Nível e linguagem indicam educação infantil, escuta, exploração e autonomia criativa.",
-      };
+    if (hasAny("infantil", "educação infantil", "educacao infantil", "creche", "pré-escola", "pre-escola", "lúdico", "ludico")) {
+      return { model: "reggio", reason: "Os detalhes sugerem Educação Infantil, escuta, autonomia e exploração criativa." };
     }
 
-    if (
-      hasAny(
-        "corporativo",
-        "educação corporativa",
-        "educacao corporativa",
-        "treinamento",
-        "onboarding",
-        "vendas",
-        "gestão",
-        "gestao",
-        "ti",
-        "engenharia",
-        "medicina",
-        "processo",
-        "procedimento",
-        "simulação",
-        "simulacao",
-        "caso real",
-        "estudo de caso"
-      )
-    ) {
-      return {
-        model: "merrill",
-        reason: "Os detalhes sugerem foco em tarefa, problema real, treinamento ou aplicação prática.",
-      };
+    if (hasAny("corporativo", "educação corporativa", "educacao corporativa", "treinamento", "onboarding", "vendas", "gestão", "gestao", "ti", "caso real", "estudo de caso")) {
+      return { model: "merrill", reason: "Os detalhes sugerem aplicação prática, problema real ou treinamento." };
     }
 
-    if (
-      hasAny(
-        "ead",
-        "híbrida",
-        "hibrida",
-        "online",
-        "remoto",
-        "assíncrona",
-        "assincrona",
-        "engajamento",
-        "atenção",
-        "atencao",
-        "tema árido",
-        "tema arido",
-        "gravação",
-        "gravacao",
-        "áudio",
-        "audio"
-      )
-    ) {
-      return {
-        model: "arcs",
-        reason: "Os detalhes sugerem necessidade de motivação, atenção e manutenção de engajamento em contexto mediado.",
-      };
+    if (hasAny("ead", "híbrida", "hibrida", "online", "remoto", "áudio", "audio", "engajamento", "tema árido", "tema arido")) {
+      return { model: "arcs", reason: "Os detalhes sugerem desafio de motivação, atenção e engajamento." };
     }
 
-    if (
-      hasAny(
-        "prova",
-        "redação",
-        "redacao",
-        "argumentação",
-        "argumentacao",
-        "análise",
-        "analise",
-        "interpretação",
-        "interpretacao",
-        "produção textual",
-        "producao textual",
-        "debate",
-        "ensaio",
-        "critério",
-        "criterio"
-      )
-    ) {
-      return {
-        model: "bloom",
-        reason: "Os detalhes sugerem foco em complexidade cognitiva, argumentação e produção intelectual.",
-      };
+    if (hasAny("prova", "redação", "redacao", "argumentação", "argumentacao", "análise", "analise", "produção textual", "producao textual", "debate")) {
+      return { model: "bloom", reason: "Os detalhes sugerem foco em complexidade cognitiva e construção intelectual." };
     }
 
-    if (
-      hasAny(
-        "coordenação",
-        "coordenacao",
-        "currículo",
-        "curriculo",
-        "plano de curso",
-        "planejamento",
-        "estrutura do curso",
-        "desenho instrucional",
-        "matriz curricular"
-      )
-    ) {
-      return {
-        model: "addie",
-        reason: "Os detalhes indicam planejamento mais macro, coerência de design ou estrutura de curso.",
-      };
+    if (hasAny("coordenação", "coordenacao", "currículo", "curriculo", "plano de curso", "planejamento", "desenho instrucional")) {
+      return { model: "addie", reason: "Os detalhes sugerem planejamento macro e design instrucional." };
     }
 
-    if (
-      hasAny(
-        "google classroom",
-        "moodle",
-        "plataforma",
-        "tecnologia",
-        "lms",
-        "ambiente virtual",
-        "ferramenta digital",
-        "lousa digital",
-        "aplicativo",
-        "software educativo"
-      )
-    ) {
-      return {
-        model: "tpack",
-        reason: "Os detalhes sugerem integração relevante entre conteúdo, pedagogia e tecnologia.",
-      };
+    if (hasAny("google classroom", "moodle", "plataforma", "tecnologia", "lms", "ambiente virtual", "lousa digital", "aplicativo")) {
+      return { model: "tpack", reason: "Os detalhes sugerem integração entre pedagogia, tecnologia e conteúdo." };
     }
 
-    if (
-      hasAny(
-        "mídia",
-        "midia",
-        "vídeo",
-        "video",
-        "multimídia",
-        "multimidia",
-        "recurso digital",
-        "uso de tecnologia",
-        "recurso audiovisual"
-      )
-    ) {
-      return {
-        model: "assure",
-        reason: "Os detalhes sugerem forte presença de mídia e necessidade de avaliar seleção e uso de recursos.",
-      };
+    if (hasAny("mídia", "midia", "vídeo", "video", "multimídia", "multimidia", "recurso digital", "recurso audiovisual")) {
+      return { model: "assure", reason: "Os detalhes sugerem aula mediada por recursos e tecnologia." };
     }
 
-    if (
-      hasAny(
-        "impacto",
-        "resultado",
-        "aplicação prática",
-        "aplicacao pratica",
-        "mudança de comportamento",
-        "mudanca de comportamento",
-        "transferência",
-        "transferencia"
-      )
-    ) {
-      return {
-        model: "kirkpatrick",
-        reason: "Os detalhes sugerem interesse em impacto, aplicação e resultados posteriores à aula.",
-      };
+    if (hasAny("impacto", "resultado", "aplicação prática", "aplicacao pratica", "mudança de comportamento", "mudanca de comportamento")) {
+      return { model: "kirkpatrick", reason: "Os detalhes sugerem foco em impacto e aplicação posterior." };
     }
 
-    return {
-      model: "gagne",
-      reason: "Modelo padrão para avaliar estrutura, sequência e lógica instrucional da aula.",
-    };
+    return { model: "gagne", reason: "Modelo padrão para avaliar estrutura, sequência e lógica da aula." };
   }
 
   async function shareRecording(recordId) {
@@ -919,10 +771,7 @@
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({
-          files: [file],
-          title: "Gravação do Orelho"
-        });
+        await navigator.share({ files: [file], title: "Gravação do Orelho" });
         return;
       } catch {}
     }
@@ -944,7 +793,6 @@
     }
 
     const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
 
     audioModalRoot.innerHTML = `
       <div class="audio-modal" id="audioModal">
@@ -1005,7 +853,6 @@
     analysisBlock.classList.add("hidden");
 
     await renderHistory();
-
     alert("Gravação deletada.");
   }
 
@@ -1073,16 +920,10 @@
     const cfg = readPostConfig();
     const inferred = inferModelFromConfig(cfg);
 
-    const suggestionLabel = document.getElementById("suggestedModelLabel");
-    const suggestionReason = document.getElementById("suggestedModelReason");
-    const sourceLabel = document.getElementById("selectedModelSourceLabel");
     const currentLabel = document.getElementById("selectedModelLabel");
     const sourceInput = document.getElementById("postAnalysisModelSource");
     const modelInput = document.getElementById("postAnalysisModel");
     const reasonInput = document.getElementById("postAnalysisModelReason");
-
-    if (suggestionLabel) suggestionLabel.textContent = MODEL_CATALOG[inferred.model].label;
-    if (suggestionReason) suggestionReason.textContent = inferred.reason;
 
     let selectedModel = currentSelectedModelKey();
     let selectedSource = sourceInput?.value || "auto";
@@ -1100,7 +941,6 @@
       : inferred.reason;
 
     if (currentLabel) currentLabel.textContent = MODEL_CATALOG[selectedModel].label;
-    if (sourceLabel) sourceLabel.textContent = selectedSource === "user" ? "Modelo definido por você" : "Modelo sugerido pelo Orelho";
   }
 
   function bindDetailsInputs() {
@@ -1129,15 +969,6 @@
         updateModelSuggestionUI();
       });
     });
-
-    const useSuggestedBtn = document.getElementById("useSuggestedModelBtn");
-    if (useSuggestedBtn) {
-      useSuggestedBtn.onclick = () => {
-        const sourceInput = document.getElementById("postAnalysisModelSource");
-        if (sourceInput) sourceInput.value = "auto";
-        updateModelSuggestionUI();
-      };
-    }
 
     const clearLastConfigBtn = document.getElementById("clearLastConfigBtn");
     if (clearLastConfigBtn) {
@@ -1225,7 +1056,7 @@
     alert("Autoavaliação salva.");
   }
 
-  function drawDashboardChart(canvasId, values, labels, title) {
+  function drawDashboardChart(canvasId, values, labels) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -1239,10 +1070,6 @@
 
     ctx.clearRect(0, 0, W, H);
 
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "bold 28px Arial";
-    if (title) ctx.fillText(title, 28, 36);
-
     if (!values.length) {
       ctx.fillStyle = "#94a3b8";
       ctx.font = "24px Arial";
@@ -1250,7 +1077,7 @@
       return;
     }
 
-    const margin = { top: 60, right: 40, bottom: 70, left: 40 };
+    const margin = { top: 30, right: 40, bottom: 70, left: 40 };
     const chartW = W - margin.left - margin.right;
     const chartH = H - margin.top - margin.bottom;
 
@@ -1303,7 +1130,7 @@
     ctx.stroke();
 
     const lx = W - 120;
-    const ly = 52;
+    const ly = 28;
     ctx.strokeStyle = "#ef8b6c";
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -1321,34 +1148,50 @@
     return `
       <div class="card">
         <div class="top-line">
-          <strong>Dashboard</strong>
-          <span class="small">${analyzedWithEval.length} registro(s) com autoavaliação</span>
+          <strong>Seu Histórico</strong>
+          <button class="ghost" id="toggleHistoryBtn">Mostrar / ocultar</button>
         </div>
+        <div id="historyContent" class="hidden">
+          <div class="small" style="margin-top:8px;">${analyzedWithEval.length} registro(s) com autoavaliação salva.</div>
+          <div class="dashboard-grid">
+            <div class="chart-card">
+              <div class="chart-title">Minha preparação prévia</div>
+              <canvas id="chartPreparacao"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Minha motivação prévia</div>
+              <canvas id="chartMotivacao"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Meu estado físico na gravação</div>
+              <canvas id="chartFisico"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Meu estado mental/emocional na gravação</div>
+              <canvas id="chartMental"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Infraestrutura funcionando na gravação</div>
+              <canvas id="chartInfraestrutura"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Minha satisfação final</div>
+              <canvas id="chartSatisfacao"></canvas>
+            </div>
+          </div>
 
-        <div class="dashboard-grid">
-          <div class="chart-card">
-            <div class="chart-title">Minha preparação prévia</div>
-            <canvas id="chartPreparacao"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Minha motivação prévia</div>
-            <canvas id="chartMotivacao"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Meu estado físico na gravação</div>
-            <canvas id="chartFisico"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Meu estado mental/emocional na gravação</div>
-            <canvas id="chartMental"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Infraestrutura funcionando na gravação</div>
-            <canvas id="chartInfraestrutura"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Minha satisfação final</div>
-            <canvas id="chartSatisfacao"></canvas>
+          <div class="history-list">
+            ${records.filter(r => r.analysisStatus === "analyzed").map((record) => `
+              <div class="history-item" data-history-id="${record.id}">
+                <div class="history-title">${formatDateTime(record.createdAt)}</div>
+                <div class="small" style="margin-bottom:6px;">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
+                <div>
+                  ${buildTagsFromConfig(record.config, record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "").map(tag => `<span class="pill">${escapeHtml(tag)}</span>`).join("")}
+                  ${record.socioSaved ? `<span class="pill">autoavaliação salva</span>` : `<span class="pill">autoavaliação pendente</span>`}
+                  <span class="pill">${record.analysisModelSource === "user" ? "modelo definido por você" : "modelo sugerido"}</span>
+                </div>
+              </div>
+            `).join("")}
           </div>
         </div>
       </div>
@@ -1359,12 +1202,12 @@
     const analyzedWithEval = records.filter(r => r.analysisStatus === "analyzed" && r.socioSaved);
     const labels = analyzedWithEval.map(r => formatShortDate(r.createdAt));
 
-    drawDashboardChart("chartPreparacao", analyzedWithEval.map(r => Number(r.socio?.preparacao ?? 0)), labels, "");
-    drawDashboardChart("chartMotivacao", analyzedWithEval.map(r => Number(r.socio?.motivacao ?? 0)), labels, "");
-    drawDashboardChart("chartFisico", analyzedWithEval.map(r => Number(r.socio?.fisico ?? 0)), labels, "");
-    drawDashboardChart("chartMental", analyzedWithEval.map(r => Number(r.socio?.mental ?? 0)), labels, "");
-    drawDashboardChart("chartInfraestrutura", analyzedWithEval.map(r => Number(r.socio?.infraestrutura ?? 0)), labels, "");
-    drawDashboardChart("chartSatisfacao", analyzedWithEval.map(r => Number(r.socio?.satisfacao ?? 0)), labels, "");
+    drawDashboardChart("chartPreparacao", analyzedWithEval.map(r => Number(r.socio?.preparacao ?? 0)), labels);
+    drawDashboardChart("chartMotivacao", analyzedWithEval.map(r => Number(r.socio?.motivacao ?? 0)), labels);
+    drawDashboardChart("chartFisico", analyzedWithEval.map(r => Number(r.socio?.fisico ?? 0)), labels);
+    drawDashboardChart("chartMental", analyzedWithEval.map(r => Number(r.socio?.mental ?? 0)), labels);
+    drawDashboardChart("chartInfraestrutura", analyzedWithEval.map(r => Number(r.socio?.infraestrutura ?? 0)), labels);
+    drawDashboardChart("chartSatisfacao", analyzedWithEval.map(r => Number(r.socio?.satisfacao ?? 0)), labels);
   }
 
   function renderStructureBlocks(record) {
@@ -1378,11 +1221,10 @@
       </div>
     `).join("");
   }
-
-  function renderAnalysis(record) {
+    function renderAnalysis(record) {
     analysisBlock.classList.remove("hidden");
     const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação";
-    const modelLabel = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Robert Gagné";
+    const modelLabel = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
 
     analysisBlock.innerHTML = `
       <div class="card">
@@ -1391,12 +1233,8 @@
       </div>
 
       <div class="card">
-        <div class="top-line">
-          <strong>Modelo usado</strong>
-          <span class="small">${escapeHtml(modelLabel)}</span>
-        </div>
+        <strong>Modelo usado: ${escapeHtml(modelLabel)}</strong>
         <div class="small" style="margin-top:8px;">${escapeHtml(record.analysisModelReason || "Sem motivo registrado.")}</div>
-        <div class="small" style="margin-top:8px;"><strong>Comentário técnico do áudio:</strong> ${escapeHtml(record.audioComment || "Sem comentário técnico complementar.")}</div>
       </div>
 
       <div class="card">
@@ -1499,7 +1337,7 @@
     return y + 4;
   }
 
-  function generatePdf(record) {
+  async function generatePdf(record) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -1526,9 +1364,8 @@
     }
 
     addWrapped("Relatório de análise da gravação", true);
-    addWrapped(`Modelo: ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Robert Gagné"}`);
+    addWrapped(`Modelo: ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`);
     addWrapped(`Motivo da escolha: ${record.analysisModelReason || "Sem motivo registrado."}`);
-    addWrapped(`Comentário técnico do áudio: ${record.audioComment || "Sem comentário técnico complementar."}`);
 
     addWrapped("Detalhes da gravação", true);
     y = addTable(doc, y, [
@@ -1545,7 +1382,7 @@
     addWrapped("Resumo rápido", true);
     addWrapped(record.tldr || "Sem resumo disponível.");
 
-    addWrapped(`Feedback pedagógico — ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Robert Gagné"}`, true);
+    addWrapped(`Feedback pedagógico — ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`, true);
     (record.structure || []).forEach((row, i) => {
       addWrapped(`${i + 1}. ${row.criterion || ""}`, true);
       addWrapped(`Evidência: ${row.evidence || "—"}`);
@@ -1563,149 +1400,7 @@
       ["Minha satisfação final", record.socio?.satisfacao ?? "-"],
     ]);
 
-    doc.addPage();
-    y = 20;
-    addWrapped("Painel gráfico da autoavaliação", true);
-
-    const temp = document.createElement("div");
-    temp.style.position = "absolute";
-    temp.style.left = "-99999px";
-    temp.style.top = "0";
-    temp.style.width = "900px";
-    temp.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <canvas id="pdfChartPreparacao" width="800" height="420"></canvas>
-        <canvas id="pdfChartMotivacao" width="800" height="420"></canvas>
-        <canvas id="pdfChartFisico" width="800" height="420"></canvas>
-        <canvas id="pdfChartMental" width="800" height="420"></canvas>
-        <canvas id="pdfChartInfraestrutura" width="800" height="420"></canvas>
-        <canvas id="pdfChartSatisfacao" width="800" height="420"></canvas>
-      </div>
-    `;
-    document.body.appendChild(temp);
-
-    const valueMap = [
-      ["pdfChartPreparacao", [record.socio?.preparacao ?? 0], [formatShortDate(record.createdAt)], "Minha preparação prévia"],
-      ["pdfChartMotivacao", [record.socio?.motivacao ?? 0], [formatShortDate(record.createdAt)], "Minha motivação prévia"],
-      ["pdfChartFisico", [record.socio?.fisico ?? 0], [formatShortDate(record.createdAt)], "Meu estado físico na gravação"],
-      ["pdfChartMental", [record.socio?.mental ?? 0], [formatShortDate(record.createdAt)], "Meu estado mental/emocional na gravação"],
-      ["pdfChartInfraestrutura", [record.socio?.infraestrutura ?? 0], [formatShortDate(record.createdAt)], "Infraestrutura funcionando na gravação"],
-      ["pdfChartSatisfacao", [record.socio?.satisfacao ?? 0], [formatShortDate(record.createdAt)], "Minha satisfação final"],
-    ];
-
-    valueMap.forEach(([id, values, labels, title]) => {
-      drawDashboardChart(id, values, labels, title);
-    });
-
-    const canvases = temp.querySelectorAll("canvas");
-    let drawY = 30;
-    let isLeft = true;
-    canvases.forEach((canvas, index) => {
-      const img = canvas.toDataURL("image/png");
-      const x = isLeft ? 10 : 108;
-      doc.addImage(img, "PNG", x, drawY, 90, 52);
-      isLeft = !isLeft;
-      if (isLeft) drawY += 58;
-      if (index === canvases.length - 1 && !isLeft) drawY += 58;
-    });
-
-    document.body.removeChild(temp);
-
     doc.save(`orelho-analise-${Date.now()}.pdf`);
-  }
-
-  function renderDashboard(records) {
-    const analyzedWithEval = records.filter(r => r.analysisStatus === "analyzed" && r.socioSaved);
-
-    return `
-      <div class="card">
-        <div class="top-line">
-          <strong>Seu Histórico</strong>
-          <button class="ghost" id="toggleHistoryBtn">Mostrar / ocultar</button>
-        </div>
-        <div id="historyContent" class="hidden">
-          <div class="small" style="margin-top:8px;">${analyzedWithEval.length} registro(s) com autoavaliação salva.</div>
-          <div class="dashboard-grid">
-            <div class="chart-card">
-              <div class="chart-title">Minha preparação prévia</div>
-              <canvas id="chartPreparacao"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Minha motivação prévia</div>
-              <canvas id="chartMotivacao"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Meu estado físico na gravação</div>
-              <canvas id="chartFisico"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Meu estado mental/emocional na gravação</div>
-              <canvas id="chartMental"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Infraestrutura funcionando na gravação</div>
-              <canvas id="chartInfraestrutura"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Minha satisfação final</div>
-              <canvas id="chartSatisfacao"></canvas>
-            </div>
-          </div>
-
-          <div class="history-list">
-            ${records.filter(r => r.analysisStatus === "analyzed").map((record) => `
-              <div class="history-item" data-history-id="${record.id}">
-                <div class="history-title">${formatDateTime(record.createdAt)}</div>
-                <div class="small" style="margin-bottom:6px;">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
-                <div>
-                  ${buildTagsFromConfig(record.config, record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "").map(tag => `<span class="pill">${escapeHtml(tag)}</span>`).join("")}
-                  ${record.socioSaved ? `<span class="pill">autoavaliação salva</span>` : `<span class="pill">autoavaliação pendente</span>`}
-                  <span class="pill">${record.analysisModelSource === "user" ? "modelo definido por você" : "modelo sugerido"}</span>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function paintDashboard(records) {
-    const analyzedWithEval = records.filter(r => r.analysisStatus === "analyzed" && r.socioSaved);
-    const labels = analyzedWithEval.map(r => formatShortDate(r.createdAt));
-
-    drawDashboardChart("chartPreparacao", analyzedWithEval.map(r => Number(r.socio?.preparacao ?? 0)), labels, "");
-    drawDashboardChart("chartMotivacao", analyzedWithEval.map(r => Number(r.socio?.motivacao ?? 0)), labels, "");
-    drawDashboardChart("chartFisico", analyzedWithEval.map(r => Number(r.socio?.fisico ?? 0)), labels, "");
-    drawDashboardChart("chartMental", analyzedWithEval.map(r => Number(r.socio?.mental ?? 0)), labels, "");
-    drawDashboardChart("chartInfraestrutura", analyzedWithEval.map(r => Number(r.socio?.infraestrutura ?? 0)), labels, "");
-    drawDashboardChart("chartSatisfacao", analyzedWithEval.map(r => Number(r.socio?.satisfacao ?? 0)), labels, "");
-  }
-
-  async function renderHistory() {
-    const records = await getAllRecords();
-    const analyzed = records.filter(r => r.analysisStatus === "analyzed");
-
-    if (!analyzed.length) {
-      historyBlock.innerHTML = "";
-      return;
-    }
-
-    historyBlock.innerHTML = renderDashboard(analyzed);
-
-    const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
-    const historyContent = document.getElementById("historyContent");
-
-    toggleHistoryBtn.onclick = () => {
-      historyContent.classList.toggle("hidden");
-      if (!historyContent.classList.contains("hidden")) {
-        paintDashboard(analyzed);
-      }
-    };
-
-    document.querySelectorAll("[data-history-id]").forEach((el) => {
-      el.onclick = () => openHistoryRecord(el.getAttribute("data-history-id"));
-    });
   }
 
   function buildPostRecordModelSection(config) {
@@ -1716,11 +1411,7 @@
 
     return `
       <div class="card" style="margin-top:14px;background:#fff;">
-        <strong>Modelo de análise</strong>
-        <div class="small" style="margin-top:8px;"><strong>Modelo sugerido pelo Orelho:</strong> <span id="suggestedModelLabel">${MODEL_CATALOG[inferred.model].label}</span></div>
-        <div class="small" id="suggestedModelReason" style="margin-top:6px;">${inferred.reason}</div>
-
-        <div class="small" style="margin-top:10px;"><strong id="selectedModelSourceLabel">${config.analysisModelSource === "user" ? "Modelo definido por você" : "Modelo sugerido pelo Orelho"}</strong>: <span id="selectedModelLabel">${MODEL_CATALOG[selectedKey].label}</span></div>
+        <strong>Modelo de Análise: <span id="selectedModelLabel">${MODEL_CATALOG[selectedKey].label}</span></strong>
 
         <input type="hidden" id="postAnalysisModel" value="${selectedKey}" />
         <input type="hidden" id="postAnalysisModelSource" value="${config.analysisModelSource || "auto"}" />
@@ -1728,7 +1419,6 @@
 
         <div class="controls" style="justify-content:flex-start;">
           <button class="ghost" id="toggleModelOptionsBtn">Trocar modelo</button>
-          <button class="ghost" id="useSuggestedModelBtn">Usar modelo sugerido</button>
           <button class="ghost" id="clearLastConfigBtn">Limpar preenchimento</button>
         </div>
 
@@ -1755,8 +1445,9 @@
           <button class="ghost" id="toggleDetailsBtn">Mostrar / ocultar</button>
         </div>
 
+        <div class="small details-summary" id="postDetailsSummary"></div>
+
         <div id="detailsBlock" class="hidden">
-          <div class="small" id="postDetailsSummary" style="margin-top:8px;"></div>
           <div class="voice-help">🎤 Segure o botão do microfone para falar.</div>
 
           <div class="field-grid">
@@ -1906,7 +1597,7 @@
         return;
       }
 
-      note.textContent = "Orelho trabalhando pra você. Pode levar alguns minutos";
+      note.innerHTML = `<span class="analyzing">Orelho trabalhando pra você...</span>`;
 
       const blob = await getAudioBlob(record.id);
       if (!blob) {
@@ -1944,11 +1635,10 @@
 
       current.transcript = data.transcript || "";
       current.tldr = data.tldr || "";
-      current.audioComment = data.audio_comment || "";
       current.structure = Array.isArray(data.structure) ? data.structure : [];
       current.analysisStatus = "analyzed";
       current.analysisModel = data.model || current.analysisModel || "gagne";
-      current.analysisModelLabel = data.model_label || MODEL_CATALOG[current.analysisModel]?.label || "Robert Gagné";
+      current.analysisModelLabel = data.model_label || MODEL_CATALOG[current.analysisModel]?.label || "Gagné";
       current.analysisModelReason = data.model_reason || current.analysisModelReason || "";
       current.analysisModelSource = data.model_source || current.analysisModelSource || "auto";
 
@@ -2031,12 +1721,11 @@
           durationMinutes: saved.durationMinutes,
         },
         analysisModel: saved.analysisModel || "gagne",
-        analysisModelLabel: MODEL_CATALOG[saved.analysisModel || "gagne"]?.label || "Robert Gagné",
+        analysisModelLabel: MODEL_CATALOG[saved.analysisModel || "gagne"]?.label || "Gagné",
         analysisModelReason: saved.analysisModelReason || "Modelo padrão.",
         analysisModelSource: saved.analysisModelSource || "auto",
         transcript: "",
         tldr: "",
-        audioComment: "",
         structure: [],
         socio: {
           preparacao: 5,
