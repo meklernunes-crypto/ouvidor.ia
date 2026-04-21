@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1020,14 +1019,6 @@
       });
     });
 
-    document.querySelectorAll('input[name="analysisModelChoice"]').forEach((radio) => {
-      radio.addEventListener("change", () => {
-        const sourceInput = document.getElementById("postAnalysisModelSource");
-        if (sourceInput) sourceInput.value = "user";
-        updateModelSuggestionUI();
-      });
-    });
-
     const clearLastConfigBtn = document.getElementById("clearLastConfigBtn");
     if (clearLastConfigBtn) {
       clearLastConfigBtn.onclick = () => {
@@ -1103,6 +1094,23 @@
 
   function getDashboardRecords(records) {
     return (records || []).filter(r => r.analysisStatus === "analyzed" && hasUsableSelfEval(r));
+  }
+
+  function getLessonScore(record) {
+    const s = record?.socio || {};
+    const vals = [
+      Number(s.preparacao ?? 0),
+      Number(s.motivacao ?? 0),
+      Number(s.fisico ?? 0),
+      Number(s.mental ?? 0),
+      Number(s.infraestrutura ?? 0),
+      Number(s.satisfacao ?? 0),
+    ].filter(v => !Number.isNaN(v));
+
+    if (!vals.length) return null;
+
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return Number(avg.toFixed(1));
   }
 
   async function saveSelfEvaluation(recordId, idsMap) {
@@ -1236,8 +1244,15 @@
     analysisBlock.classList.remove("hidden");
     const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação";
     const modelLabel = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
+    const lessonScore = getLessonScore(record);
 
     analysisBlock.innerHTML = `
+      <div class="card">
+        <div class="section-title">Nota da Aula</div>
+        <div class="metric" style="margin-top:0;">${lessonScore !== null ? lessonScore : "-"}</div>
+        <div class="small">Média das 6 notas da sua autoavaliação.</div>
+      </div>
+
       <div class="card">
         <div class="section-title">Resumo rápido</div>
         <div class="gagne-block">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
@@ -1378,239 +1393,7 @@
     addWrapped(`Modelo: ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`);
     addWrapped(`Motivo da escolha: ${record.analysisModelReason || "Sem motivo registrado."}`);
 
-    addWrapped("Detalhes da gravação", true);
-    y = addTable(doc, y, [
-      ["Local/Instituição", record.config?.localInstitution || "Não informado"],
-      ["Ano/Semestre Letivo; Ciclo; Módulo", record.config?.yearLevel || "Não informado"],
-      ["Identificação do Curso", record.config?.courseId || "Não informado"],
-      ["Identificação da Turma", record.config?.classId || "Não informado"],
-      ["Disciplina", record.config?.subject || "Não informado"],
-      ["Tema/Objetivo do Encontro", record.config?.topicObjective || "Não informado"],
-      ["Aluno(s) Específico(s)", record.config?.specificStudents || "Não informado"],
-      ["Duração prevista do encontro", record.config?.durationMinutes || "Não informado"],
-    ]);
-
-    addWrapped("Resumo rápido", true);
-    addWrapped(record.tldr || "Sem resumo disponível.");
-
-    addWrapped(`Feedback pedagógico — ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`, true);
-    (record.structure || []).forEach((row, i) => {
-      addWrapped(`${i + 1}. ${row.criterion || ""}`, true);
-      addWrapped(`Evidência: ${row.evidence || "—"}`);
-      addWrapped(`Avaliação: ${row.evaluation || "—"}`);
-      addWrapped(`Observações: ${row.observation || "—"}`);
-    });
-
-    addWrapped("Autoavaliação", true);
-    y = addTable(doc, y, [
-      ["Minha preparação prévia", record.socio?.preparacao ?? "-"],
-      ["Minha motivação prévia", record.socio?.motivacao ?? "-"],
-      ["Meu estado físico na gravação", record.socio?.fisico ?? "-"],
-      ["Meu estado mental/emocional na gravação", record.socio?.mental ?? "-"],
-      ["Infraestrutura funcionando na gravação", record.socio?.infraestrutura ?? "-"],
-      ["Minha satisfação final", record.socio?.satisfacao ?? "-"],
-    ]);
-
-    const allRecords = await getAllRecords();
-    const dashboardRecords = getDashboardRecords(allRecords);
-
-    if (dashboardRecords.length > 0) {
-      doc.addPage();
-      y = 20;
-      addWrapped("Painel gráfico da autoavaliação", true);
-
-      const temp = document.createElement("div");
-      temp.style.position = "absolute";
-      temp.style.left = "-99999px";
-      temp.style.top = "0";
-      temp.style.width = "900px";
-      temp.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <canvas id="pdfChartPreparacao" width="800" height="420"></canvas>
-          <canvas id="pdfChartMotivacao" width="800" height="420"></canvas>
-          <canvas id="pdfChartFisico" width="800" height="420"></canvas>
-          <canvas id="pdfChartMental" width="800" height="420"></canvas>
-          <canvas id="pdfChartInfraestrutura" width="800" height="420"></canvas>
-          <canvas id="pdfChartSatisfacao" width="800" height="420"></canvas>
-        </div>
-      `;
-      document.body.appendChild(temp);
-
-      const labels = dashboardRecords.map(r => formatShortDate(r.createdAt));
-      const valueMap = [
-        ["pdfChartPreparacao", dashboardRecords.map(r => Number(r.socio?.preparacao ?? 0)), labels],
-        ["pdfChartMotivacao", dashboardRecords.map(r => Number(r.socio?.motivacao ?? 0)), labels],
-        ["pdfChartFisico", dashboardRecords.map(r => Number(r.socio?.fisico ?? 0)), labels],
-        ["pdfChartMental", dashboardRecords.map(r => Number(r.socio?.mental ?? 0)), labels],
-        ["pdfChartInfraestrutura", dashboardRecords.map(r => Number(r.socio?.infraestrutura ?? 0)), labels],
-        ["pdfChartSatisfacao", dashboardRecords.map(r => Number(r.socio?.satisfacao ?? 0)), labels],
-      ];
-
-      valueMap.forEach(([id, values, lbls]) => drawDashboardChart(id, values, lbls));
-
-      const canvases = temp.querySelectorAll("canvas");
-      let drawY = 30;
-      let isLeft = true;
-
-      canvases.forEach((canvas, index) => {
-        const img = canvas.toDataURL("image/png");
-        const x = isLeft ? 10 : 108;
-        doc.addImage(img, "PNG", x, drawY, 90, 52);
-        isLeft = !isLeft;
-        if (isLeft) drawY += 58;
-        if (index === canvases.length - 1 && !isLeft) drawY += 58;
-      });
-
-      document.body.removeChild(temp);
-    }
-
-    doc.save(`orelho-analise-${Date.now()}.pdf`);
-  }
-    function renderAnalysis(record) {
-    analysisBlock.classList.remove("hidden");
-    const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação";
-    const modelLabel = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
-
-    analysisBlock.innerHTML = `
-      <div class="card">
-        <div class="section-title">Resumo rápido</div>
-        <div class="gagne-block">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
-      </div>
-
-      <div class="card">
-        <strong>Modelo usado: ${escapeHtml(modelLabel)}</strong>
-        <div class="small" style="margin-top:8px;">${escapeHtml(record.analysisModelReason || "Sem motivo registrado.")}</div>
-      </div>
-
-      <div class="card">
-        <strong>Feedback pedagógico — ${escapeHtml(modelLabel)}</strong>
-        <div style="margin-top:12px;">
-          ${renderStructureBlocks(record)}
-        </div>
-      </div>
-
-      <div class="card">
-        <strong>Sua autoavaliação</strong>
-        <div class="range-grid">
-          ${renderSlider("Minha preparação prévia", "cur-preparacao", record.socio?.preparacao ?? 5)}
-          ${renderSlider("Minha motivação prévia", "cur-motivacao", record.socio?.motivacao ?? 5)}
-          ${renderSlider("Meu estado físico na gravação", "cur-fisico", record.socio?.fisico ?? 5)}
-          ${renderSlider("Meu estado mental/emocional na gravação", "cur-mental", record.socio?.mental ?? 5)}
-          ${renderSlider("Infraestrutura funcionando na gravação", "cur-infraestrutura", record.socio?.infraestrutura ?? 5)}
-          ${renderSlider("Minha satisfação final", "cur-satisfacao", record.socio?.satisfacao ?? 5)}
-        </div>
-        <div class="controls">
-          <button class="primary" id="saveEvalBtn">Salvar autoavaliação</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <strong>Ações</strong>
-        <div class="small" style="margin:10px 0 14px;">Arquivo de gravação: ${audioSizeLabel}</div>
-        <div class="controls">
-          <button class="ghost" id="savePdfBtn">Salvar PDF</button>
-          <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>Ouvir gravação</button>
-          <button class="ghost" id="deleteAudioBtn" ${record.recorded ? "" : "disabled"}>Deletar gravação</button>
-          <button class="ghost" id="shareAudioBtn" ${record.recorded ? "" : "disabled"}>Compartilhar gravação</button>
-        </div>
-      </div>
-    `;
-
-    applyRangeColors([
-      "cur-preparacao",
-      "cur-motivacao",
-      "cur-fisico",
-      "cur-mental",
-      "cur-infraestrutura",
-      "cur-satisfacao"
-    ]);
-
-    document.getElementById("saveEvalBtn").onclick = () => saveSelfEvaluation(record.id, {
-      preparacao: "cur-preparacao",
-      motivacao: "cur-motivacao",
-      fisico: "cur-fisico",
-      mental: "cur-mental",
-      infraestrutura: "cur-infraestrutura",
-      satisfacao: "cur-satisfacao"
-    });
-
-    document.getElementById("savePdfBtn").onclick = async () => {
-      const latest = await getRecord(record.id);
-      if (latest) generatePdf(latest);
-    };
-    document.getElementById("playCurrentAudioBtn").onclick = () => openAudioPlayer(record.id);
-    document.getElementById("deleteAudioBtn").onclick = () => deleteRecording(record.id);
-    document.getElementById("shareAudioBtn").onclick = () => shareRecording(record.id);
-  }
-
-  async function openHistoryRecord(recordId) {
-    const record = await getRecord(recordId);
-    if (!record) return;
-    renderAnalysis(record);
-    analysisBlock.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function addTable(doc, startY, rows) {
-    let y = startY;
-    const leftX = 15;
-    const rightX = 105;
-    const colWidth = 85;
-    const lineHeight = 5;
-
-    doc.setDrawColor(207, 216, 227);
-    rows.forEach(([key, value]) => {
-      const leftLines = doc.splitTextToSize(String(key), colWidth - 4);
-      const rightLines = doc.splitTextToSize(String(value), colWidth - 4);
-      const rowHeight = Math.max(leftLines.length, rightLines.length) * lineHeight + 4;
-
-      if (y + rowHeight > 280) {
-        doc.addPage();
-        y = 20;
-      }
-
-      doc.rect(leftX, y, colWidth, rowHeight);
-      doc.rect(rightX, y, colWidth, rowHeight);
-
-      doc.setFont("helvetica", "bold");
-      doc.text(leftLines, leftX + 2, y + 4);
-      doc.setFont("helvetica", "normal");
-      doc.text(rightLines, rightX + 2, y + 4);
-
-      y += rowHeight;
-    });
-
-    return y + 4;
-  }
-
-  async function generatePdf(record) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    let y = 15;
-    const pageWidth = 180;
-    const compact = 5;
-
-    function addWrapped(text, bold = false) {
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      const lines = doc.splitTextToSize(text, pageWidth);
-      doc.text(lines, 15, y);
-      y += lines.length * compact + 2;
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-    }
-
-    try {
-      doc.addImage("orelho-logo.png", "PNG", 15, y, 45, 18);
-      y += 24;
-    } catch {
-      addWrapped("ORELHO", true);
-    }
-
-    addWrapped("Relatório de análise da gravação", true);
-    addWrapped(`Modelo: ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`);
-    addWrapped(`Motivo da escolha: ${record.analysisModelReason || "Sem motivo registrado."}`);
+    addWrapped(`Nota da Aula: ${getLessonScore(record) ?? "-"}`, true);
 
     addWrapped("Detalhes da gravação", true);
     y = addTable(doc, y, [
@@ -1817,8 +1600,7 @@
           </div>
         </div>
       </div>
-
-      <div class="card">
+            <div class="card">
         <div class="section-title">Gravação encerrada</div>
 
         ${buildPostRecordModelSection(cfg)}
@@ -1958,7 +1740,8 @@
     document.getElementById("deleteBtn").onclick = () => deleteRecording(record.id);
     document.getElementById("shareBtn").onclick = () => shareRecording(record.id);
   }
-    async function clearAllHistory() {
+
+  async function clearAllHistory() {
     const ok = confirm("Isso apagará TODAS as aulas, áudios e gráficos. Deseja continuar?");
     if (!ok) return;
 
