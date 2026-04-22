@@ -486,6 +486,23 @@
       .filter-grid{grid-template-columns:1fr}
     }
 
+    .quick-block{
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      border-radius:16px;
+      padding:14px;
+      margin-top:10px;
+    }
+
+    .quick-list{
+      margin:8px 0 0 18px;
+      padding:0;
+    }
+
+    .pdf-cover{
+      font-size:0;
+    }
+
     @keyframes pulse{
       0%{opacity:0.3}
       50%{opacity:1}
@@ -1196,6 +1213,113 @@
     );
   }
 
+  function renderStructureBlocks(record) {
+    const rows = Array.isArray(record.structure) ? record.structure : [];
+    return rows.map((row, i) => `
+      <div class="gagne-block">
+        <strong>${i + 1}. ${escapeHtml(row.criterion || "")}</strong>
+        <div class="gagne-line"><strong>Evidência:</strong> ${escapeHtml(row.evidence || "—")}</div>
+        <div class="gagne-line"><strong>Avaliação:</strong> ${escapeHtml(row.evaluation || "—")}</div>
+        <div class="gagne-line"><strong>Observações:</strong> ${escapeHtml(row.observation || "—")}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderFilterBlock() {
+    return `
+      <div class="card">
+        <strong>Filtrar evolução</strong>
+        <div class="filter-grid">
+          <input id="filterInstitution" placeholder="Instituição" value="${escapeHtml(activeFilters.institution)}" />
+          <input id="filterCourse" placeholder="Curso" value="${escapeHtml(activeFilters.course)}" />
+          <input id="filterClass" placeholder="Turma" value="${escapeHtml(activeFilters.classId)}" />
+          <input id="filterSubject" placeholder="Disciplina" value="${escapeHtml(activeFilters.subject)}" />
+        </div>
+        <div class="controls-left">
+          <button class="ghost" id="applyFilterBtn">Aplicar filtro</button>
+          <button class="ghost" id="clearFilterBtn">Limpar filtro</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function extractQuickStrengths(record) {
+    const rows = Array.isArray(record.structure) ? record.structure : [];
+    const items = rows
+      .map(r => r.evaluation || r.observation || r.criterion || "")
+      .filter(Boolean)
+      .slice(0, 3);
+    return items.length ? items : ["Há pontos fortes identificados na aula."];
+  }
+
+  function extractQuickImprovements(record) {
+    const rows = Array.isArray(record.structure) ? record.structure : [];
+    const items = rows
+      .map(r => r.observation || r.evaluation || "")
+      .filter(Boolean)
+      .slice(0, 3);
+    return items.length ? items : ["Há oportunidades de melhoria para aprofundar na análise completa."];
+  }
+
+  function copySummaryText(text) {
+    navigator.clipboard.writeText(text || "");
+    alert("Resumo copiado.");
+  }
+
+  function buildWhatsAppText(record) {
+    const score = getLessonScore(record);
+    const model = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
+    return `Resumo da aula:\n${record.tldr || ""}\n\nNota da Aula: ${score ?? "-"}\nModelo: ${model}`;
+  }
+
+  function shareWhatsApp(record) {
+    const url = `https://wa.me/?text=${encodeURIComponent(buildWhatsAppText(record))}`;
+    window.open(url, "_blank");
+  }
+    function renderQuickAnalysis(record) {
+    analysisBlock.classList.remove("hidden");
+    const strengths = extractQuickStrengths(record);
+    const improvements = extractQuickImprovements(record);
+
+    analysisBlock.innerHTML = `
+      <div class="card">
+        <div class="section-title">Análise rápida</div>
+
+        <div class="quick-block">
+          <strong>Resumo</strong>
+          <div style="margin-top:8px;">${escapeHtml(record.tldr || "Sem resumo disponível.")}</div>
+        </div>
+
+        <div class="quick-block">
+          <strong>Pontos fortes</strong>
+          <ul class="quick-list">
+            ${strengths.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="quick-block">
+          <strong>Melhorias</strong>
+          <ul class="quick-list">
+            ${improvements.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="controls">
+          <button class="primary" id="deepAnalysisBtn">Aprofundar análise</button>
+          <button class="ghost" id="copySummaryBtn">Copiar resumo</button>
+          <button class="ghost" id="whatsSummaryBtn">WhatsApp</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("deepAnalysisBtn").onclick = async () => {
+      const latest = await getRecord(record.id);
+      if (latest) renderAnalysis(latest);
+    };
+    document.getElementById("copySummaryBtn").onclick = () => copySummaryText(record.tldr || "");
+    document.getElementById("whatsSummaryBtn").onclick = () => shareWhatsApp(record);
+  }
+
   async function saveSelfEvaluation(recordId, idsMap) {
     const current = await getRecord(recordId);
     if (!current) return;
@@ -1324,36 +1448,7 @@
     if (insightEl) insightEl.textContent = getChartInsight(values);
   }
 
-  function renderStructureBlocks(record) {
-    const rows = Array.isArray(record.structure) ? record.structure : [];
-    return rows.map((row, i) => `
-      <div class="gagne-block">
-        <strong>${i + 1}. ${escapeHtml(row.criterion || "")}</strong>
-        <div class="gagne-line"><strong>Evidência:</strong> ${escapeHtml(row.evidence || "—")}</div>
-        <div class="gagne-line"><strong>Avaliação:</strong> ${escapeHtml(row.evaluation || "—")}</div>
-        <div class="gagne-line"><strong>Observações:</strong> ${escapeHtml(row.observation || "—")}</div>
-      </div>
-    `).join("");
-  }
-
-  function renderFilterBlock() {
-    return `
-      <div class="card">
-        <strong>Filtrar evolução</strong>
-        <div class="filter-grid">
-          <input id="filterInstitution" placeholder="Instituição" value="${escapeHtml(activeFilters.institution)}" />
-          <input id="filterCourse" placeholder="Curso" value="${escapeHtml(activeFilters.course)}" />
-          <input id="filterClass" placeholder="Turma" value="${escapeHtml(activeFilters.classId)}" />
-          <input id="filterSubject" placeholder="Disciplina" value="${escapeHtml(activeFilters.subject)}" />
-        </div>
-        <div class="controls-left">
-          <button class="ghost" id="applyFilterBtn">Aplicar filtro</button>
-          <button class="ghost" id="clearFilterBtn">Limpar filtro</button>
-        </div>
-      </div>
-    `;
-  }
-    function renderAnalysis(record) {
+  function renderAnalysis(record) {
     analysisBlock.classList.remove("hidden");
     const audioSizeLabel = record.recorded ? `${bytesToMB(record.audioSizeBytes || 0)} MB` : "sem gravação";
     const modelLabel = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
@@ -1405,6 +1500,8 @@
         <div class="small" style="margin:10px 0 14px;">Arquivo de gravação: ${audioSizeLabel}</div>
         <div class="controls">
           <button class="ghost" id="savePdfBtn">Salvar PDF</button>
+          <button class="ghost" id="copySummaryFullBtn">Copiar resumo</button>
+          <button class="ghost" id="shareWhatsFullBtn">WhatsApp</button>
           <button class="ghost" id="playCurrentAudioBtn" ${record.recorded ? "" : "disabled"}>Ouvir gravação</button>
           <button class="ghost" id="deleteAudioBtn" ${record.recorded ? "" : "disabled"}>Deletar gravação</button>
           <button class="ghost" id="shareAudioBtn" ${record.recorded ? "" : "disabled"}>Compartilhar gravação</button>
@@ -1434,6 +1531,8 @@
       const latest = await getRecord(record.id);
       if (latest) generatePdf(latest);
     };
+    document.getElementById("copySummaryFullBtn").onclick = () => copySummaryText(record.tldr || "");
+    document.getElementById("shareWhatsFullBtn").onclick = () => shareWhatsApp(record);
     document.getElementById("playCurrentAudioBtn").onclick = () => openAudioPlayer(record.id);
     document.getElementById("deleteAudioBtn").onclick = () => deleteRecording(record.id);
     document.getElementById("shareAudioBtn").onclick = () => shareRecording(record.id);
@@ -1482,33 +1581,61 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    let y = 15;
+    let y = 20;
     const pageWidth = 180;
-    const compact = 5;
-
-    function addWrapped(text, bold = false) {
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      const lines = doc.splitTextToSize(text, pageWidth);
-      doc.text(lines, 15, y);
-      y += lines.length * compact + 2;
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-    }
+    const score = getLessonScore(record);
+    const model = record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné";
 
     try {
-      doc.addImage("orelho-logo.png", "PNG", 15, y, 45, 18);
+      doc.addImage("orelho-logo.png", "PNG", 15, y, 42, 16);
       y += 24;
     } catch {
-      addWrapped("ORELHO", true);
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(18);
+      doc.text("ORELHO", 15, y);
+      y += 10;
     }
 
-    addWrapped("Relatório de análise da gravação", true);
-    addWrapped(`Modelo: ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`);
-    addWrapped(`Motivo da escolha: ${record.analysisModelReason || "Sem motivo registrado."}`);
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(24);
+    doc.text("Relatório da Aula", 15, y);
+    y += 18;
 
-    addWrapped("Detalhes da gravação", true);
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(48);
+    doc.text(String(score ?? "-"), 15, y);
+    y += 8;
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(12);
+    doc.text("Nota da Aula", 15, y);
+    y += 12;
+
+    doc.setFont("helvetica","bold");
+    doc.text(`Modelo: ${model}`, 15, y);
+    y += 7;
+
+    doc.setFont("helvetica","normal");
+    doc.text(`Data: ${formatDateTime(record.createdAt)}`, 15, y);
+    y += 12;
+
+    doc.setDrawColor(220, 228, 238);
+    doc.line(15, y, 195, y);
+    y += 10;
+
+    doc.setFont("helvetica","bold");
+    doc.text("Resumo", 15, y);
+    y += 7;
+
+    doc.setFont("helvetica","normal");
+    const summaryLines = doc.splitTextToSize(record.tldr || "Sem resumo disponível.", pageWidth);
+    doc.text(summaryLines, 15, y);
+    y += summaryLines.length * 6 + 10;
+
+    doc.setFont("helvetica","bold");
+    doc.text("Detalhes da gravação", 15, y);
+    y += 6;
+
     y = addTable(doc, y, [
       ["Local/Instituição", record.config?.localInstitution || "Não informado"],
       ["Ano/Semestre Letivo; Ciclo; Módulo", record.config?.yearLevel || "Não informado"],
@@ -1520,18 +1647,39 @@
       ["Duração prevista do encontro", record.config?.durationMinutes || "Não informado"],
     ]);
 
-    addWrapped("Resumo rápido", true);
-    addWrapped(record.tldr || "Sem resumo disponível.");
+    doc.setFont("helvetica","bold");
+    doc.text(`Feedback pedagógico — ${model}`, 15, y);
+    y += 8;
 
-    addWrapped(`Feedback pedagógico — ${record.analysisModelLabel || MODEL_CATALOG[record.analysisModel || "gagne"]?.label || "Gagné"}`, true);
     (record.structure || []).forEach((row, i) => {
-      addWrapped(`${i + 1}. ${row.criterion || ""}`, true);
-      addWrapped(`Evidência: ${row.evidence || "—"}`);
-      addWrapped(`Avaliação: ${row.evaluation || "—"}`);
-      addWrapped(`Observações: ${row.observation || "—"}`);
+      const lines = [
+        `${i + 1}. ${row.criterion || ""}`,
+        `Evidência: ${row.evidence || "—"}`,
+        `Avaliação: ${row.evaluation || "—"}`,
+        `Observações: ${row.observation || "—"}`,
+      ];
+      lines.forEach((line, idx) => {
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont("helvetica", idx === 0 ? "bold" : "normal");
+        const split = doc.splitTextToSize(line, pageWidth);
+        doc.text(split, 15, y);
+        y += split.length * 6 + 2;
+      });
+      y += 4;
     });
 
-    addWrapped("Autoavaliação", true);
+    if (y > 240) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFont("helvetica","bold");
+    doc.text("Autoavaliação", 15, y);
+    y += 6;
+
     y = addTable(doc, y, [
       ["Minha preparação prévia", record.socio?.preparacao ?? "-"],
       ["Minha motivação prévia", record.socio?.motivacao ?? "-"],
@@ -1541,15 +1689,15 @@
       ["Minha satisfação final", record.socio?.satisfacao ?? "-"],
     ]);
 
-    addWrapped(`Nota da Aula: ${getLessonScore(record) ?? "-"}`, true);
-
     const allRecords = await getAllRecords();
     const dashboardRecords = getDashboardRecords(allRecords).filter(recordMatchesFilters);
 
     if (dashboardRecords.length > 0) {
       doc.addPage();
       y = 20;
-      addWrapped("Painel gráfico da autoavaliação", true);
+      doc.setFont("helvetica","bold");
+      doc.text("Painel gráfico da autoavaliação", 15, y);
+      y += 8;
 
       const temp = document.createElement("div");
       temp.style.position = "absolute";
@@ -1596,7 +1744,68 @@
       document.body.removeChild(temp);
     }
 
-    doc.save(`orelho-analise-${Date.now()}.pdf`);
+    doc.save(`orelho-relatorio-${Date.now()}.pdf`);
+  }
+    async function runAnalyze(record, depth = "full") {
+    const note = document.getElementById("analyzeConnectionNote");
+
+    if (!navigator.onLine) {
+      note.textContent = "Sem conexão para analisar.";
+      return null;
+    }
+
+    startAnalysisLoading(note);
+
+    const blob = await getAudioBlob(record.id);
+    if (!blob) {
+      stopAnalysisLoading();
+      note.textContent = "Gravação não encontrada.";
+      return null;
+    }
+
+    const fd = new FormData();
+    fd.append("audio", blob, "gravacao.webm");
+    fd.append("localInstitution", record.config?.localInstitution || "");
+    fd.append("yearLevel", record.config?.yearLevel || "");
+    fd.append("courseId", record.config?.courseId || "");
+    fd.append("classId", record.config?.classId || "");
+    fd.append("subject", record.config?.subject || "");
+    fd.append("topicObjective", record.config?.topicObjective || "");
+    fd.append("specificStudents", record.config?.specificStudents || "");
+    fd.append("durationMinutes", record.config?.durationMinutes || "");
+    fd.append("systemDate", new Date(record.createdAt).toLocaleString("pt-BR"));
+    fd.append("analysisModel", record.analysisModel || "gagne");
+    fd.append("analysisModelSource", record.analysisModelSource || "auto");
+    fd.append("analysisModelReason", record.analysisModelReason || "");
+    fd.append("analysisDepth", depth);
+
+    let data;
+    try {
+      const resp = await fetch("/analyze", { method: "POST", body: fd });
+      data = await resp.json();
+    } catch (e) {
+      data = { error: "Falha ao conectar com o servidor." };
+    }
+
+    stopAnalysisLoading();
+
+    if (data.error) {
+      note.textContent = data.error;
+      return null;
+    }
+
+    record.transcript = data.transcript || record.transcript || "";
+    record.tldr = data.tldr || record.tldr || "";
+    record.structure = Array.isArray(data.structure) ? data.structure : (record.structure || []);
+    record.analysisStatus = "analyzed";
+    record.analysisModel = data.model || record.analysisModel || "gagne";
+    record.analysisModelLabel = data.model_label || MODEL_CATALOG[record.analysisModel]?.label || "Gagné";
+    record.analysisModelReason = data.model_reason || record.analysisModelReason || "";
+    record.analysisModelSource = data.model_source || record.analysisModelSource || "auto";
+
+    await putRecord(record);
+    note.textContent = depth === "quick" ? "Análise rápida concluída." : "Análise concluída.";
+    return record;
   }
 
   function buildPostRecordModelSection(config) {
@@ -1721,8 +1930,13 @@
 
         ${buildPostRecordModelSection(cfg)}
 
-        <button class="primary-wide" id="analyzeBtn">Analisar gravação</button>
-        <div class="small" id="analyzeConnectionNote" style="margin-top:8px;">
+        <button class="primary-wide" id="quickAnalyzeBtn">Análise rápida</button>
+        <div class="small" style="margin-top:6px;">Visão direta da aula em poucos segundos.</div>
+
+        <button class="ghost" id="fullAnalyzeBtn" style="width:100%;margin-top:10px;">Análise completa</button>
+        <div class="small" style="margin-top:6px;">Estrutura pedagógica detalhada.</div>
+
+        <div class="small" id="analyzeConnectionNote" style="margin-top:10px;">
           ${navigator.onLine ? "" : "Sem conexão para analisar."}
         </div>
 
@@ -1761,9 +1975,7 @@
       });
     });
 
-    document.getElementById("analyzeBtn").onclick = async () => {
-      const note = document.getElementById("analyzeConnectionNote");
-
+    async function persistCurrentConfig() {
       const newCfg = {
         ...readPostConfig(),
         analysisModel: document.getElementById("postAnalysisModel").value,
@@ -1774,7 +1986,7 @@
       saveConfig(newCfg);
 
       const current = await getRecord(record.id);
-      if (!current) return;
+      if (!current) return null;
 
       current.config = {
         localInstitution: newCfg.localInstitution,
@@ -1791,72 +2003,35 @@
       current.analysisModelReason = newCfg.analysisModelReason;
 
       await putRecord(current);
+      return current;
+    }
 
-      if (!navigator.onLine) {
-        note.textContent = "Sem conexão para analisar.";
-        return;
+    document.getElementById("quickAnalyzeBtn").onclick = async () => {
+      const current = await persistCurrentConfig();
+      if (!current) return;
+      const analyzed = await runAnalyze(current, "quick");
+      if (analyzed) {
+        renderQuickAnalysis(analyzed);
+        await renderHistory();
       }
+    };
 
-      startAnalysisLoading(note);
-
-      const blob = await getAudioBlob(record.id);
-      if (!blob) {
-        stopAnalysisLoading();
-        note.textContent = "Gravação não encontrada.";
-        return;
+    document.getElementById("fullAnalyzeBtn").onclick = async () => {
+      const current = await persistCurrentConfig();
+      if (!current) return;
+      const analyzed = await runAnalyze(current, "full");
+      if (analyzed) {
+        renderAnalysis(analyzed);
+        await renderHistory();
       }
-
-      const fd = new FormData();
-      fd.append("audio", blob, "gravacao.webm");
-      fd.append("localInstitution", current.config.localInstitution || "");
-      fd.append("yearLevel", current.config.yearLevel || "");
-      fd.append("courseId", current.config.courseId || "");
-      fd.append("classId", current.config.classId || "");
-      fd.append("subject", current.config.subject || "");
-      fd.append("topicObjective", current.config.topicObjective || "");
-      fd.append("specificStudents", current.config.specificStudents || "");
-      fd.append("durationMinutes", current.config.durationMinutes || "");
-      fd.append("systemDate", new Date(current.createdAt).toLocaleString("pt-BR"));
-      fd.append("analysisModel", current.analysisModel || "gagne");
-      fd.append("analysisModelSource", current.analysisModelSource || "auto");
-      fd.append("analysisModelReason", current.analysisModelReason || "");
-
-      let data;
-      try {
-        const resp = await fetch("/analyze", { method: "POST", body: fd });
-        data = await resp.json();
-      } catch (e) {
-        data = { error: "Falha ao conectar com o servidor." };
-      }
-
-      stopAnalysisLoading();
-
-      if (data.error) {
-        note.textContent = data.error;
-        return;
-      }
-
-      current.transcript = data.transcript || "";
-      current.tldr = data.tldr || "";
-      current.structure = Array.isArray(data.structure) ? data.structure : [];
-      current.analysisStatus = "analyzed";
-      current.analysisModel = data.model || current.analysisModel || "gagne";
-      current.analysisModelLabel = data.model_label || MODEL_CATALOG[current.analysisModel]?.label || "Gagné";
-      current.analysisModelReason = data.model_reason || current.analysisModelReason || "";
-      current.analysisModelSource = data.model_source || current.analysisModelSource || "auto";
-
-      await putRecord(current);
-
-      note.textContent = "Análise concluída.";
-      renderAnalysis(current);
-      await renderHistory();
     };
 
     document.getElementById("listenBtn").onclick = () => openAudioPlayer(record.id);
     document.getElementById("deleteBtn").onclick = () => deleteRecording(record.id);
     document.getElementById("shareBtn").onclick = () => shareRecording(record.id);
   }
-    async function clearAllHistory() {
+
+  async function clearAllHistory() {
     const ok = confirm("Isso apagará TODAS as aulas, áudios e gráficos. Deseja continuar?");
     if (!ok) return;
 
